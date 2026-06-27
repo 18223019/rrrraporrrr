@@ -1,0 +1,33 @@
+/**
+ * VisuallyHidden Styles
+ * Hides element visually while keeping it accessible
+ */
+
+.visually-hidden {
+  /* Remove from visual flow */
+  position: absolute;
+  
+  /* Tiny size to avoid layout impact */
+  width: 1px;
+  height: 1px;
+  
+  /* Hide overflow */
+  overflow: hidden;
+  
+  /* Clip to 1px box */
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  
+  /* Remove from layout */
+  white-space: nowrap;
+  
+  /* Ensure it doesn't interfere */
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
+/* Ensure it's still readable by screen readers */
+.visually-hidden:not(:focus):not(:active) {
+  position: absolute !important;
+}

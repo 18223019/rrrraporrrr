@@ -1,0 +1,122 @@
+/*
+ * Responsive layout helpers for MainLayout & mobile navigation
+ */
+
+.main-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-layout__content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: transparent;
+  box-sizing: border-box;
+  padding-left: 240px;
+  transition: padding-left 0.3s ease;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: clamp(1.5rem, 2vw, 2.5rem);
+  overflow-x: hidden;
+  transition: padding 0.2s ease;
+}
+
+.main-layout.sidebar-expanded .main-layout__content-area {
+  padding-left: 240px;
+}
+
+.main-layout.sidebar-collapsed .main-layout__content-area {
+  padding-left: 80px;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 15, 31, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 900;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+.mobile-topbar__brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.mobile-topbar__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  background: rgba(17, 24, 39, 0.32);
+  color: var(--text-primary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 24px rgba(8, 47, 73, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mobile-topbar__menu:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px rgba(8, 47, 73, 0.45);
+}
+
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    padding: 1.25rem 1rem 2.5rem;
+  }
+
+  .main-layout__content-area {
+    padding-left: 0 !important;
+  }
+
+  .mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 920;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1rem;
+    background: rgba(12, 18, 31, 0.88);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .main-layout.sidebar-expanded .main-content,
+  .main-layout.sidebar-collapsed .main-content {
+    margin-left: 0;
+  }
+}

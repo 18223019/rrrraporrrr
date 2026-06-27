@@ -1,0 +1,525 @@
+/**
+ * Bento Grid Layout System - Rapor Asrama Revamp
+ * Based on 16:9 ratio with flexible card sizing
+ */
+
+:root {
+  /* Grid Configuration */
+  --grid-columns: 16;
+  --grid-rows: 9;
+  --grid-gap: 1rem;           /* 16px gap between cards */
+  --grid-gap-sm: 0.75rem;     /* 12px for mobile */
+  
+  /* Card Spacing */
+  --card-padding: 1.5rem;     /* 24px internal padding */
+  --card-padding-sm: 1rem;    /* 16px for mobile */
+  
+  /* Border Radius */
+  --radius-sm: 0.5rem;        /* 8px */
+  --radius-md: 0.75rem;       /* 12px */
+  --radius-lg: 1rem;          /* 16px */
+  --radius-xl: 1.5rem;        /* 24px */
+  
+  /* Bento Card Variants */
+  --bento-radius: var(--radius-lg);
+}
+
+/* Main Bento Grid Container */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: var(--grid-gap);
+  width: 100%;
+  padding: var(--grid-gap);
+  /* Remove strict aspect-ratio for better flexibility */
+  min-height: auto;
+  /* Auto-flow for dynamic content */
+  grid-auto-rows: minmax(120px, auto);
+}
+
+/* Compact mode for 16:9 pages - Better balanced */
+.page-16-9 .bento-grid {
+  gap: 1rem; /* Standard spacing, not too tight */
+  padding: 0;
+  grid-auto-rows: minmax(140px, auto); /* Better minimum height */
+}
+
+.page-16-9 .bento-card {
+  padding: 1.5rem; /* Standard padding for readability */
+  min-height: unset; /* Allow natural height */
+}
+
+/* Bento Card Base - Liquid Glass Effect with Rim Light */
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+  
+  /* Liquid Glass Effect (from reference) */
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(140%) contrast(105%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%) contrast(105%);
+  box-shadow: var(--glass-shadow);
+  
+  /* Transparent border untuk rim light effect */
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  
+  /* Smooth transitions */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Inner Specular - Simple elegant highlights (from reference) */
+.bento-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(160% 90% at 0% -10%, rgba(255, 255, 255, 0.18), transparent 60%),
+    radial-gradient(120% 70% at 120% 120%, rgba(255, 255, 255, 0.06), transparent 60%);
+  mix-blend-mode: screen;
+  z-index: 0;
+}
+
+perbarui/* Animated Gradient Border (removed per request) */
+.bento-card::after {
+  content: none;
+}
+
+
+
+/* NO additional effects - keep it clean and simple like reference */
+
+/* Ensure content is above overlays */
+.bento-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.bento-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Card Size Variants */
+.bento-card-large {
+  grid-column: span 8;
+  min-height: 300px;
+}
+
+.bento-card-medium {
+  grid-column: span 4; /* Each gauge takes 4 cols (3 cards fit in 12 cols grid) */
+  min-height: 240px;
+}
+
+.bento-card-small {
+  grid-column: span 4;
+  min-height: 180px;
+}
+
+.bento-card-wide {
+  grid-column: span 8;
+  min-height: 200px;
+}
+
+.bento-card-tall {
+  grid-column: span 4;
+  min-height: 400px;
+}
+
+/* Custom Sizes for Dashboard Layout */
+.bento-card-profile {
+  grid-column: span 4; /* Profile card on left, takes 4 cols */
+  grid-row: span 2; /* Spans 2 rows to align with 4 gauges (2x2 grid) */
+  min-height: 500px;
+}
+
+.bento-card-kpi {
+  grid-column: span 3;
+  min-height: 150px;
+}
+
+.bento-card-chart {
+  grid-column: span 4; /* Gauge charts, each takes 4 cols */
+  min-height: 240px;
+}
+
+/* Card Header */
+.bento-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bento-card-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: #e8eef6;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bento-card-subtitle {
+  font-size: var(--text-sm);
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+.bento-card-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #60a5fa;
+}
+
+/* Card Body */
+.bento-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+}
+
+/* Card Footer */
+.bento-card-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #9ca3af;
+}
+
+/* Category Color Accents - Liquid Glass Style */
+.bento-card-ketakmiran::after {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--ketakmiran) 0deg,
+    #60a5fa66 90deg,
+    var(--ketakmiran) 180deg,
+    #a78bfa66 270deg,
+    var(--ketakmiran) 360deg
+  );
+}
+
+.bento-card-pembinaan::after {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--pembinaan) 0deg,
+    #22c55e55 90deg,
+    var(--pembinaan) 180deg,
+    #10b98155 270deg,
+    var(--pembinaan) 360deg
+  );
+}
+
+.bento-card-aktualisasi::after {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--aktualisasi) 0deg,
+    #f59e0b66 90deg,
+    var(--aktualisasi) 180deg,
+    #f97316 66 270deg,
+    var(--aktualisasi) 360deg
+  );
+}
+
+.bento-card-internal::after {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--internal) 0deg,
+    #8b5cf666 90deg,
+    var(--internal) 180deg,
+    #a78bfa66 270deg,
+    var(--internal) 360deg
+  );
+}
+
+/* Card Background Variants - Liquid Glass */
+.bento-card-gradient {
+  background: hsla(0, 0%, 100%, 0.12);
+  backdrop-filter: blur(25px) saturate(160%);
+  -webkit-backdrop-filter: blur(25px) saturate(160%);
+}
+
+.bento-card-primary {
+  background: hsla(250, 70%, 60%, 0.15);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+}
+
+/* Gauge Card Specific */
+.gauge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.gauge-card-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.gauge-card-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.5rem;
+}
+
+/* Profile Card Specific */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.bento-card-profile .bento-card-body {
+  justify-content: center;
+  overflow: visible;
+  padding-top: 0;
+}
+
+.profile-avatar {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--bg-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: white;
+  box-shadow: var(--shadow-lg);
+  margin: 0.5rem 0 1.5rem 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.profile-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-name {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+
+}
+
+.profile-username {
+  font-size: var(--text-base);
+  color: var(--text-tertiary);
+}
+
+/* KPI Card Specific */
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kpi-label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--text-tertiary);
+}
+
+.kpi-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-change {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.kpi-change.positive {
+  color: var(--success);
+}
+
+.kpi-change.negative {
+  color: var(--error);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1400px) {
+  .bento-grid {
+    grid-template-columns: repeat(12, 1fr);
+    --grid-columns: 12;
+  }
+  
+  .bento-card-profile {
+    grid-column: span 4;
+  }
+  
+  .bento-card-kpi {
+    grid-column: span 3;
+  }
+  
+  .bento-card-chart {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 1024px) {
+  .bento-grid {
+    grid-template-columns: repeat(6, 1fr);
+    --grid-columns: 6;
+  }
+  
+  .bento-card-large,
+  .bento-card-medium,
+  .bento-card-wide,
+  .bento-card-profile,
+  .bento-card-chart {
+    grid-column: span 3;
+  }
+  
+  .bento-card-small,
+  .bento-card-kpi {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    --grid-columns: 2;
+    gap: var(--grid-gap-sm);
+    padding: var(--grid-gap-sm);
+  }
+  
+  .bento-card {
+    padding: var(--card-padding-sm);
+  }
+  
+  .bento-card-large,
+  .bento-card-medium,
+  .bento-card-wide,
+  .bento-card-tall,
+  .bento-card-profile,
+  .bento-card-chart {
+    grid-column: span 2;
+  }
+  
+  .bento-card-small,
+  .bento-card-kpi {
+    grid-column: span 1;
+  }
+  
+  .profile-avatar {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .profile-name {
+    font-size: var(--text-xl);
+  }
+
+  .bento-card-profile .bento-card-body {
+    justify-content: flex-start;
+    align-items: center;
+    padding-bottom: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+    --grid-columns: 1;
+  }
+  
+  .bento-card-large,
+  .bento-card-medium,
+  .bento-card-small,
+  .bento-card-wide,
+  .bento-card-tall,
+  .bento-card-kpi,
+  .bento-card-profile,
+  .bento-card-chart {
+    grid-column: span 1;
+    min-height: 200px;
+  }
+
+  .bento-card-profile {
+    min-height: 360px;
+  }
+
+  .bento-card-profile .bento-card-body {
+    padding-bottom: 1.25rem;
+  }
+}
+
+/* Loading State */
+.bento-card.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.bento-card.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 3px solid var(--primary-200);
+  border-top-color: var(--primary-600);
+  background: transparent;
+  box-shadow: none;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+
+
+/* Empty State */
+.bento-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  gap: 0.5rem;
+}
+
+.bento-card-empty-icon {
+  width: 3rem;
+  height: 3rem;
+  opacity: 0.3;
+}
+
+.bento-card-empty-text {
+  font-size: var(--text-sm);
+}

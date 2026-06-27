@@ -1,0 +1,22 @@
+# Cloudflare Worker Configuration
+name = "asrama-proxy"
+main = "worker.js"
+compatibility_date = "2025-10-11"
+
+# Account & Zone (ganti dengan ID Anda)
+account_id = "YOUR_CF_ACCOUNT_ID"
+workers_dev = false
+
+# Route (custom domain)
+route = "your_domain.com/api/*"
+zone_id = "YOUR_CF_ZONE_ID"
+
+# R2 Bucket Binding
+[[r2_buckets]]
+binding = "ASRAMA_BUCKET"
+bucket_name = "asrama-storage"
+preview_bucket_name = "asrama-storage"
+
+# Environment Variables (opsional, bisa di-set via dashboard)
+# [vars]
+# GAS_URL = "https://script.google.com/macros/s/your_gas_url_here/exec"

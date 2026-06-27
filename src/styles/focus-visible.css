@@ -1,0 +1,122 @@
+/**
+ * Focus Visible Styles
+ * WCAG 2.1 - Focus Visible (2.4.7)
+ * Shows focus indicators only for keyboard navigation
+ */
+
+/* Remove default focus outline for mouse users */
+*:focus {
+  outline: none;
+}
+
+/* Show focus outline only for keyboard users */
+*:focus-visible {
+  outline: 3px solid var(--primary-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+  transition: outline 0.2s ease-in-out;
+}
+
+/* Specific focus styles for interactive elements */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* Input focus styles */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 0;
+  border-color: var(--primary-500);
+}
+
+/* Card/clickable area focus */
+.bento-card:focus-visible,
+[role="link"]:focus-visible {
+  outline: 3px solid var(--primary-500);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+/* Modal close button */
+.modal-close:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+  background-color: var(--gray-100);
+}
+
+/* Navigation items */
+.nav-item:focus-visible {
+  outline: 2px solid var(--primary-500);
+  outline-offset: -2px;
+  background-color: var(--primary-50);
+}
+
+/* Skip link special handling */
+.skip-link:focus-visible {
+  outline: 3px solid white;
+  outline-offset: -3px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
+/* Reduced motion support - instant focus transitions */
+@media (prefers-reduced-motion: reduce) {
+  *:focus-visible {
+    transition: none;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  *:focus-visible {
+    outline-color: var(--primary-400);
+  }
+  
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    border-color: var(--primary-400);
+  }
+}
+
+/* Focus within - for containers with focused children */
+.focus-within:focus-within {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
+  border-color: var(--primary-500);
+}
+
+/* Keyboard navigation helper class */
+.keyboard-user *:focus {
+  outline: 3px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* Focus trap indicator */
+[data-focus-trap="true"] {
+  position: relative;
+}
+
+[data-focus-trap="true"]::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px dashed var(--primary-300);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+[data-focus-trap="true"]:focus-within::before {
+  opacity: 1;
+}

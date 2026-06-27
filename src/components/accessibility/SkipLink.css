@@ -1,0 +1,40 @@
+/**
+ * SkipLink Styles
+ * Visible only on keyboard focus
+ */
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  
+  background-color: var(--primary-600);
+  color: white;
+  padding: 1rem 2rem;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  
+  transition: top 0.2s ease-in-out;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--primary-300);
+  outline-offset: 2px;
+}
+
+.skip-link:hover {
+  background-color: var(--primary-700);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .skip-link {
+    border: 2px solid currentColor;
+  }
+}

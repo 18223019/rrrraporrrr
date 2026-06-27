@@ -1,0 +1,83 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.local
+.env.production
+functions/.dev.vars
+!functions/.dev.vars.example
+
+# Firebase
+.firebase
+.firebaserc
+firebase-debug.log
+firebaseServiceAccount.json
+
+# Cloudflare
+.wrangler
+wrangler.toml
+
+# Secrets
+**/secrets/
+**/*.key
+**/*.pem
+
+# User credentials (SENSITIVE!)
+login-account.txt
+login-credentials-new.txt
+login-credentials-simple.txt
+firebaseServiceAccount.json
+
+# Backup files
+*.backup
+*.old
+*.bak
+
+# Local dev / build artifacts
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+.vitepress/
+.serverless/
+.vercel/
+.netlify/
+.cache-loader/
+.sass-cache/
+.eslintcache
+
+# Coverage and test artifacts
+coverage/
+.nyc_output/
+coverage-final.json
+
+# Misc
+.pnp.*
+npm-debug.log*
+yarn-error.log*
+
+# Environment files (ignore all but explicit examples)
+.env.*

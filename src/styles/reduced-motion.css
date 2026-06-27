@@ -1,0 +1,138 @@
+/**
+ * Reduced Motion Styles
+ * WCAG 2.1 - Animation from Interactions (2.3.3)
+ * Respects prefers-reduced-motion user preference
+ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable all animations */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable Framer Motion animations */
+  [data-framer-motion],
+  .motion-div,
+  .motion-span {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Keep essential transitions for UX */
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease !important;
+  }
+
+  /* Disable scroll animations */
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Disable stagger animations */
+  .stagger-container > * {
+    animation-delay: 0s !important;
+  }
+
+  /* Disable skeleton loaders pulse */
+  .skeleton-loader {
+    animation: none !important;
+    background: var(--gray-200) !important;
+  }
+  
+  /* Disable liquid glass rim light animations */
+  .bento-card::after {
+    animation: none !important;
+  }
+
+  /* Disable shimmer effects */
+  .shimmer,
+  .shimmer::before,
+  .shimmer::after {
+    animation: none !important;
+  }
+
+  /* Disable gauge animations */
+  canvas {
+    animation: none !important;
+  }
+
+  /* Disable chart animations via data attribute */
+  [data-chart] {
+    --animation-duration: 0 !important;
+  }
+
+  /* Disable progress bar animations */
+  .progress-bar-fill {
+    transition: width 0.15s ease !important;
+  }
+
+  /* Disable badge animations */
+  .badge {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Disable modal entrance animations */
+  .modal-overlay,
+  .modal-content {
+    animation: none !important;
+  }
+
+  /* Disable tooltip animations */
+  .tooltip {
+    transition: opacity 0.1s ease !important;
+  }
+
+  /* Disable toast animations */
+  .toast {
+    animation: none !important;
+    transition: opacity 0.15s ease !important;
+  }
+
+  /* Disable page transitions */
+  .page-transition {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Disable hover lift effects */
+  .hover-lift:hover {
+    transform: none !important;
+  }
+
+  /* Disable card hover effects */
+  .bento-card:hover {
+    transform: none !important;
+  }
+
+  /* Keep focus transitions for accessibility */
+  *:focus-visible {
+    transition: outline 0.1s ease !important;
+  }
+}
+
+/* Utility class to force reduced motion */
+.reduced-motion,
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Utility class to enable animations (override reduced motion) */
+.force-motion {
+  animation-duration: inherit !important;
+  transition-duration: inherit !important;
+}
