@@ -16,6 +16,7 @@ import { useDashboardPrefetch } from '../hooks/useDashboardPrefetch';
 import { useMonthSelector } from '../hooks/useMonthSelector';
 import { useRankings } from '../hooks/useRankings';
 import type { BidangType } from '../data/bidangConfig';
+import { getBidangGroup } from '../data/bidangConfig';
 import { formatPercent } from '../utils/format';
 
 export const DashboardPage: React.FC = () => {
@@ -36,7 +37,7 @@ export const DashboardPage: React.FC = () => {
     setSelectedMonth,
     currentMonth,
     loading: monthsLoading,
-  } = useMonthSelector();
+  } = useMonthSelector(profile?.username);
 
   // Fetch real dashboard stats from API for selected month
   const { stats, loading: statsLoading } = useDashboardStats({
@@ -78,7 +79,7 @@ export const DashboardPage: React.FC = () => {
             flexDirection: 'column',
             gap: '0.35rem',
             fontSize: '0.8rem',
-            color: 'var(--text-tertiary)',
+            color: '#765743',
           }}
         >
           <div>
@@ -101,7 +102,7 @@ export const DashboardPage: React.FC = () => {
                     borderRadius: '999px',
                     padding: '0.15rem 0.6rem',
                     fontSize: '0.75rem',
-                    color: 'var(--text-secondary)',
+                    color: '#5f4030',
                   }}
                 >
                   <span style={{ fontWeight: 500 }}>{item.column}</span>: {formatPercent(item.normalizedWeight)}
@@ -114,7 +115,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
           {inactive.length > 0 && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '0.75rem', color: '#5f4030' }}>
               Tidak dinilai:{' '}
               {inactive.map((item) => item.column).join(', ')}
             </div>
@@ -184,6 +185,14 @@ export const DashboardPage: React.FC = () => {
     };
   }, [rankings, profile?.username]);
 
+  const bidangGroup = getBidangGroup(profile?.username);
+  const isAugust = selectedMonth === 'Agustus26';
+  const visibleBidang = isAugust
+    ? bidangGroup === 'astra'
+      ? new Set<BidangType>(['ketakmiran', 'osram'])
+      : new Set<BidangType>(['osram'])
+    : new Set<BidangType>(['ketakmiran', 'pembinaan', 'aktualisasi', 'internal']);
+
   const groupBarWidth = rankingSummary
     ? Math.max(6, Math.round(Math.min(100, rankingSummary.groupPercent)))
     : 0;
@@ -231,12 +240,12 @@ export const DashboardPage: React.FC = () => {
                 fontWeight: 'bold',
                 color: 'var(--text-primary)',
                 margin: '0 0 0.5rem 0',
-                textShadow: '0 6px 20px rgba(124, 58, 237, 0.25)',
+                textShadow: '0 6px 20px rgba(112, 69, 45, 0.25)',
               }}
             >
               Rapor Asrama
             </h1>
-            <p style={{ color: '#9ca3af', margin: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
               Assalamu'alaikum, {profile?.username || ''}! 👋
             </p>
           </div>
@@ -300,7 +309,7 @@ export const DashboardPage: React.FC = () => {
               </h2>
               <p style={{
                 fontSize: '1rem',
-                color: '#9ca3af',
+                  color: '#765743',
                 margin: '0 0 0rem 0',
                 fontWeight: '400'
               }}>
@@ -309,7 +318,7 @@ export const DashboardPage: React.FC = () => {
               <p
                 style={{
                   fontSize: '0.95rem',
-                  color: '#888e98',
+                  color: '#765743',
                   margin: '0 0 0rem 0',
                   letterSpacing: '0.03em'
                 }}
@@ -319,7 +328,7 @@ export const DashboardPage: React.FC = () => {
               <p
                 style={{
                   fontSize: '0.95rem',
-                  color: '#888e98',
+                  color: '#765743',
                   margin: '0 0 0.25rem 0',
                   letterSpacing: '0.03em'
                 }}
@@ -327,7 +336,7 @@ export const DashboardPage: React.FC = () => {
                 {profile?.jurusan ?? ''}
               </p>
               <div style={{ marginTop: 'auto', paddingTop: '1.5rem' }}>
-                <div className="label" style={{ color: '#c0cfe7' }}>
+                <div className="label" style={{ color: '#5f4030', fontWeight: 700 }}>
                   Nilai Keseluruhan
                 </div>
                 <div
@@ -341,7 +350,7 @@ export const DashboardPage: React.FC = () => {
           </BentoCard>
 
           {/* Row 1 Right: Ketakmiran & Pembinaan */}
-          <BentoCard
+          {visibleBidang.has('ketakmiran') && <BentoCard
             size="medium"
             title="Ketakmiran"
             category="ketakmiran"
@@ -356,9 +365,9 @@ export const DashboardPage: React.FC = () => {
               showValue={true}
               animated={true}
             />
-          </BentoCard>
+          </BentoCard>}
 
-          <BentoCard
+          {visibleBidang.has('pembinaan') && <BentoCard
             size="medium"
             title="Pembinaan"
             category="pembinaan"
@@ -373,10 +382,10 @@ export const DashboardPage: React.FC = () => {
               showValue={true}
               animated={true}
             />
-          </BentoCard>
+          </BentoCard>}
 
           {/* Row 2 Right: Aktualisasi & Internal */}
-          <BentoCard
+          {visibleBidang.has('aktualisasi') && <BentoCard
             size="medium"
             title="Aktualisasi Diri"
             category="aktualisasi"
@@ -391,9 +400,9 @@ export const DashboardPage: React.FC = () => {
               showValue={true}
               animated={true}
             />
-          </BentoCard>
+          </BentoCard>}
 
-          <BentoCard
+          {visibleBidang.has('internal') && <BentoCard
             size="medium"
             title="Internal"
             category="internal"
@@ -408,7 +417,24 @@ export const DashboardPage: React.FC = () => {
               showValue={true}
               animated={true}
             />
-          </BentoCard>
+          </BentoCard>}
+
+          {visibleBidang.has('osram') && <BentoCard
+            size="medium"
+            title="Osram"
+            category="osram"
+            loading={loading}
+            footer={renderWeightFooter('osram')}
+          >
+            <GaugeChart
+              value={stats?.bidangBreakdown?.osram?.score || 0}
+              label="Osram"
+              category="osram"
+              size="large"
+              showValue={true}
+              animated={true}
+            />
+          </BentoCard>}
 
           <BentoCard
             size="wide"

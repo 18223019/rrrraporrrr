@@ -70,7 +70,9 @@ async function readSheetData() {
     username: row.get('username') || row.get('Panggilan'),
     email: row.get('email'),
     password: row.get('password'),
-    role: (row.get('Nama') || '').toLowerCase().includes('coach') ? 'coach' : 'member'
+    role: (row.get('role') || '').trim().toLowerCase() === 'coach'
+  ? 'coach'
+  : (row.get('Nama') || '').toLowerCase().includes('coach') ? 'coach' : 'member'
   }));
   
   return members;
@@ -96,7 +98,7 @@ async function syncUsers(members) {
     }
     
     const uid = username; // UID = username/panggilan
-    const email = `${username}@asra.com`; // Email sintetis
+    const email = `${username}@asrama.com`; // Email sintetis
     
     try {
       // Cek apakah user sudah ada

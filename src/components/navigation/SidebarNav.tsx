@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -12,10 +12,13 @@ import {
   BookOpen,
   Users,
   Sparkles,
+  ClipboardList,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { signOut } from '../../services/auth';
 
 interface NavItem {
   id: string;
@@ -31,35 +34,42 @@ const getNavItems = (userSlug: string): NavItem[] => [
     label: 'Dashboard',
     path: `/${userSlug}`,
     icon: <LayoutDashboard size={20} />,
-    color: '#8b5cf6', // Purple
+    color: '#8b5e3c',
   },
   {
     id: 'ketakmiran',
     label: 'Ketakmiran',
     path: `/${userSlug}/ketakmiran`,
     icon: <Moon size={20} />,
-    color: '#3b82f6', // Blue
+    color: '#a9744f',
   },
   {
     id: 'pembinaan',
     label: 'Pembinaan',
     path: `/${userSlug}/pembinaan`,
     icon: <BookOpen size={20} />,
-    color: '#10b981', // Green
+    color: '#b9825b',
   },
   {
     id: 'aktualisasi',
     label: 'Aktualisasi Diri',
     path: `/${userSlug}/aktualisasi`,
     icon: <Sparkles size={20} />,
-    color: '#8b5cf6', // Purple
+    color: '#8b5e3c',
   },
   {
     id: 'internal',
     label: 'Internal',
     path: `/${userSlug}/internal`,
     icon: <Users size={20} />,
-    color: '#f59e0b', // Orange
+    color: '#c08a5b',
+  },
+  {
+    id: 'osram',
+    label: 'Osram',
+    path: `/${userSlug}/osram`,
+    icon: <ClipboardList size={20} />,
+    color: '#997e67',
   },
 ];
 
@@ -79,6 +89,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   onClose,
 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const previousPathname = useRef(location.pathname);
   
@@ -86,6 +97,15 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   const userSlug = user?.uid || 'test';
   const navItems = getNavItems(userSlug);
   const isCollapsed = !isMobile && collapsed;
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Gagal logout:', error);
+    }
+  };
 
   useEffect(() => {
     const hasNavigated = previousPathname.current !== location.pathname;
@@ -139,7 +159,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
             className="sidebar-logo"
           >
             <h1 className="text-xl font-bold text-gradient">Rapor Asrama</h1>
-            <p className="text-xs text-tertiary">2025/2026</p>
+            <p className="text-xs text-tertiary">2026/2027</p>
           </motion.div>
         )}
         <button onClick={onToggle} className="sidebar-toggle" aria-label={toggleAriaLabel}>
@@ -195,7 +215,27 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
       </nav>
 
       {/* Footer */}
-      
+      <div className="sidebar-nav-footer" style={{ padding: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <button
+          onClick={handleLogout}
+          className="sidebar-nav-item"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            width: '100%',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '0.6rem 0.75rem',
+            borderRadius: '0.5rem',
+            color: '#ef4444',
+          }}
+        >
+          <LogOut size={20} />
+          {!collapsed && <span className="sidebar-nav-label">Keluar</span>}
+        </button>
+      </div>
     </motion.aside>
   );
 };

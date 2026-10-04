@@ -42,14 +42,10 @@ html {
   -moz-osx-font-smoothing: grayscale;
 
   /* Liquid Glass Mesh Gradient Colors */
-  --mesh-gradient-1: #7c3aed44;
-  /* Purple */
-  --mesh-gradient-2: #06b6d444;
-  /* Cyan */
-  --mesh-gradient-3: #22c55e33;
-  /* Green */
-  --mesh-gradient-4: #f59e0b33;
-  /* Orange */
+  --mesh-gradient-1: #8b5e3c44;
+  --mesh-gradient-2: #b9825b44;
+  --mesh-gradient-3: #eadcc866;
+  --mesh-gradient-4: #a9744f33;
 
   /* Liquid Glass Effect Variables */
   --glass-bg: hsla(0, 0%, 100%, 0.08);
@@ -63,8 +59,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #0c0f14;
-  color: #e8eef6;
+  background: #2b211b;
+  color: #fffaf3;
   overflow-x: hidden;
   position: relative;
 }
@@ -76,12 +72,12 @@ body::before {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(40% 50% at 15% 25%, rgba(0, 255, 200, 0.25), transparent 70%),
-    radial-gradient(35% 45% at 80% 70%, rgba(56, 189, 248, 0.25), transparent 70%),
-    radial-gradient(30% 40% at 70% 20%, rgba(125, 211, 252, 0.20), transparent 60%),
-    radial-gradient(50% 60% at 40% 60%, rgba(59, 130, 246, 0.15), transparent 65%),
-    linear-gradient(135deg, #0a0f1f 0%, #0d1b2a 50%, #001219 100%);
-  filter: blur(60px) saturate(130%);
+    radial-gradient(40% 50% at 15% 25%, rgba(234, 220, 200, 0.3), transparent 70%),
+    radial-gradient(35% 45% at 80% 70%, rgba(185, 130, 91, 0.3), transparent 70%),
+    radial-gradient(30% 40% at 70% 20%, rgba(216, 177, 142, 0.24), transparent 60%),
+    radial-gradient(50% 60% at 40% 60%, rgba(112, 69, 45, 0.2), transparent 65%),
+    linear-gradient(135deg, #42291d 0%, #6b4731 50%, #2b211b 100%);
+  filter: blur(60px) saturate(110%);
   pointer-events: none;
 }
 
@@ -170,4 +166,30 @@ body::before {
 :focus-visible {
   outline: 2px solid #1d4ed8;
   outline-offset: 2px;
+}
+
+/* Unified neutral elegance palette for utility classes across every page. */
+body,
+#root {
+  background-color: #997e67;
+  color: #664930;
+}
+
+[class*="bg-white"],
+[class*="bg-slate"],
+[class*="bg-gray"],
+[class*="bg-zinc"] {
+  background-color: #ccbeb1 !important;
+}
+
+[class*="bg-gradient"] {
+  background-image: linear-gradient(135deg, #ffdbbb 0%, #997e67 100%) !important;
+}
+
+.bento-card [class*="text-"] {
+  color: #664930 !important;
+}
+
+.bento-card [class*="border-"] {
+  border-color: rgba(102, 73, 48, 0.2) !important;
 }

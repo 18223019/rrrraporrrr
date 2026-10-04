@@ -43,11 +43,11 @@ const METRIC_THRESHOLDS: Record<MetricKey, [number, number]> = {
 };
 
 const getMetricColor = (key: MetricKey, value: number | null | undefined): string => {
-  if (typeof value !== 'number' || Number.isNaN(value) || value === 0) return 'inherit';
+  if (typeof value !== 'number' || Number.isNaN(value) || value === 0) return '#664930';
   const [low, high] = METRIC_THRESHOLDS[key];
-  if (value < low) return '#dc2626'; // red
-  if (value <= high) return '#d97706'; // amber/orange
-  return 'inherit'; // black (default)
+  if (value < low) return '#664930';
+  if (value <= high) return '#664930';
+  return '#664930';
 };
 
 const columnHelper = createColumnHelper<RankingMember>();
@@ -65,15 +65,15 @@ const toNumeric = (value: number | null | undefined) =>
 
 const getTierStyles = (rank: number) => {
   if (rank === 1) {
-    return 'bg-gradient-to-br from-amber-500 via-amber-400 to-amber-300 text-white shadow-inner shadow-amber-700/40';
+    return 'bg-[#664930] text-[#ffdbbb] shadow-inner shadow-[#997e67]/40';
   }
   if (rank === 2) {
-    return 'bg-slate-200 text-slate-800';
+    return 'bg-[#997e67] text-[#ffdbbb]';
   }
   if (rank === 3) {
-    return 'bg-slate-100 text-slate-700';
+    return 'bg-[#ccbeb1] text-[#664930]';
   }
-  return 'bg-slate-50 text-slate-600';
+  return 'bg-[#ffdbbb] text-[#664930]';
 };
 
 const getRowAccentClass = (rank: number) => {
@@ -225,7 +225,7 @@ export const CoachPage = () => {
               title="Klik untuk lihat detail parameter"
             >
               <div className="flex flex-col">
-                <span className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors underline-offset-2 group-hover:underline">
+                <span className="text-sm font-semibold text-[#664930] group-hover:text-[#997e67] transition-colors underline-offset-2 group-hover:underline">
                   {member.name}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export const CoachPage = () => {
           const score = toNumeric(info.getValue());
           return (
             <div className="flex flex-col gap-1.5">
-              <span className="text-base font-semibold text-slate-900">{formatMetric(score)}</span>
+              <span className="text-base font-semibold text-[#664930]">{formatMetric(score)}</span>
             </div>
           );
         },
@@ -261,26 +261,26 @@ export const CoachPage = () => {
   });
 
   return (
-    <PasswordGate correctPassword="ciecoachcak">
-      <div className="min-h-screen bg-slate-100">
+    <PasswordGate correctPassword="kochbaru">
+      <div className="min-h-screen bg-[#f3e7d8]">
 
 
-        <header className="relative z-20 isolate bg-gradient-to-r from-emerald-900 via-emerald-800 to-emerald-700">
+        <header className="coach-page-header relative z-20 isolate bg-gradient-to-r from-[#42291d] via-[#70452d] to-[#a9744f]">
           <div className="absolute inset-0 opacity-20">
             <div className="h-full w-full bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_65%)]" />
           </div>
-          <div className="relative z-20 mx-auto max-w-[1400px] px-4 py-12 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-              <div className="max-w-xl space-y-4 text-white">
-                <h1 className="text-4xl font-semibold tracking-tight">Leaderboard Virtue Wisdom</h1>
-                <p className="text-sm text-emerald-50">
+          <div className="coach-header-inner relative z-20 mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:px-10">
+              <div className="coach-header-content flex flex-col gap-12 md:flex-row md:items-start md:justify-between">
+                <div className="coach-header-copy max-w-2xl space-y-6 text-[#664930]">
+                <h1 className="text-3xl font-bold leading-tight tracking-tight text-[#664930] sm:text-4xl">Leaderboard Virtue Wisdom</h1>
+                <p className="text-sm text-[#664930]">
                   Rank anggota <span className="font-semibold">{activeTab === 'astra' ? 'Astra' : 'Astri'}</span>{' '}
                   {monthLabel ? `untuk periode ${monthLabel}.` : 'untuk periode.'}
                 </p>
               </div>
-              <div className="flex w-full flex-col gap-4 md:w-auto md:items-end">
-                <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:gap-4">
-                  <div className="flex items-center gap-2 text-emerald-100">
+                <div className="coach-header-controls flex w-full flex-col gap-5 md:w-auto md:items-end">
+                <div className="flex w-full flex-col gap-4 md:w-auto md:flex-row md:items-center md:gap-5">
+                  <div className="flex items-center gap-2 text-[#664930]">
                     <CalendarDays className="h-3 w-3" />
                     <span className="text-xs font-semibold uppercase tracking-wide"> Periode Penilaian</span>
                   </div>
@@ -292,27 +292,21 @@ export const CoachPage = () => {
                     className="coach-month-selector"
                   />
                 </div>
+                </div>
               </div>
-            </div>
 
-            <div className="mt-14 flex flex-wrap items-center gap-3 text-sm font-semibold text-white/90">
+            <div className="coach-tabs mt-14 flex flex-wrap items-center gap-5 pt-2 text-sm font-semibold text-[#664930]">
               <button
                 type="button"
                 onClick={() => setActiveTab('astra')}
-                className={clsx(
-                  'coach-tab-button',
-                  activeTab === 'astra' && 'coach-tab-button--active'
-                )}
+                className={clsx('coach-tab-button', activeTab === 'astra' && 'coach-tab-button--active')}
               >
                 Astra ({rankings?.astra?.length ?? 0})
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('astri')}
-                className={clsx(
-                  'coach-tab-button',
-                  activeTab === 'astri' && 'coach-tab-button--active'
-                )}
+                className={clsx('coach-tab-button', activeTab === 'astri' && 'coach-tab-button--active')}
               >
                 Astri ({rankings?.astri?.length ?? 0})
               </button>
@@ -320,7 +314,7 @@ export const CoachPage = () => {
           </div>
         </header>
 
-        <main className="relative z-10 mx-auto -mt-16 max-w-[1400px] px-4 pb-12 sm:px-6 lg:px-8">
+        <main className="coach-page-main relative z-10 mx-auto mt-8 max-w-[1440px] px-4 pb-16 sm:px-6 lg:px-10">
           {loading && (
             <div className="flex min-h-[420px] items-center justify-center">
               <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
@@ -359,7 +353,7 @@ export const CoachPage = () => {
             <div className="coach-table-section">
               <div className="coach-table-toolbar">
                 <a
-                  href="https://docs.google.com/spreadsheets/d/1WaK0XuJrP5adiJkL4KvR1LoPCOURPcIumAK1sKlA3j8/edit?usp=sharing"
+                  href="https://docs.google.com/spreadsheets/d/119JaNmuiLaYtmk96ibcV1kiNTaWQoAtWgKlx1nSV6tI/edit?usp=sharing"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="coach-table-link-button"

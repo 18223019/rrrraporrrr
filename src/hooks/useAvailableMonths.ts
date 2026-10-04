@@ -45,11 +45,22 @@ export const useAvailableMonths = () => {
         console.log('[useAvailableMonths] Response:', response);
 
         // Use data from API response (already in MonthOption format)
-        const monthOptions: MonthOption[] = response.data.map((month, index) => ({
+        const currentPeriodData = response.data.filter(
+          (month) => month.value === 'Agustus26' || month.value === 'September26',
+        );
+        const monthOptions: MonthOption[] = (currentPeriodData.length > 0
+          ? currentPeriodData
+          : [
+              { value: 'Agustus26', label: 'Agustus 2026', available: true },
+              { value: 'September26', label: 'September 2026', available: true },
+            ]
+        )
+          .filter((month) => month.value === 'Agustus26' || month.value === 'September26')
+          .map((month, index) => ({
           value: month.value,
           label: month.label,
           isDefault: index === 0, // First month is default
-        }));
+          }));
 
         setMonths(monthOptions);
         setDefaultMonth(monthOptions[0]?.value || '');
@@ -63,13 +74,13 @@ export const useAvailableMonths = () => {
         
         // Fallback to hardcoded months if API fails
         const fallbackMonths: MonthOption[] = [
-          { value: 'Oktober25', label: 'Oktober 2025', isDefault: true },
-          { value: 'September25', label: 'September 2025' },
-          { value: 'Agustus25', label: 'Agustus 2025' },
+          { value: 'Agustus26', label: 'Agustus 2026', isDefault: true },
+          { value: 'September26', label: 'September 2026' },
+          { value: 'Oktober26', label: 'Oktober 2026' },
         ];
         
         setMonths(fallbackMonths);
-        setDefaultMonth('Oktober25');
+        setDefaultMonth('Agustus26');
         
         console.warn('⚠️ [useAvailableMonths] Using fallback months');
       } finally {

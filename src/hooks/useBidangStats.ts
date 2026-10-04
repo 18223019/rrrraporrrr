@@ -9,6 +9,8 @@ import { useApiRoute } from './useApiRoute';
 import {
   computeBidangScore,
   getBidangParameterConfig,
+  getBidangGroup,
+  getBidangColumnAliases,
   type BidangParameterBreakdown,
   type BidangType,
 } from '../data/bidangConfig';
@@ -52,6 +54,36 @@ function getCurrentMonth(): string {
   return `${month}${year}`;
 }
 
+function normalizeColumnName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function readParameterValue(record: Record<string, unknown>, column: string): unknown {
+  if (record[column] !== undefined) return record[column];
+
+  const configuredAliases = getBidangColumnAliases(column);
+  const configuredValue = configuredAliases.map((alias) => record[alias]).find((value) => value !== undefined);
+  if (configuredValue !== undefined) return configuredValue;
+
+  const aliases: Record<string, string[]> = {
+    'Feedback (AHA)': ['Feedback AHA', 'Feedback'],
+    'Pemulsaran Jenazah': ['Pemulasaran Jenazah', 'Pemulsaran jenazah'],
+    'Temu Bidang II': ['Temu Bidang Il', 'Remu Bidang II'],
+  };
+  const candidates = [column, ...(aliases[column] ?? [])];
+  const normalizedEntries = Object.entries(record).map(([key, value]) => [
+    normalizeColumnName(key),
+    value,
+  ] as const);
+
+  for (const candidate of candidates) {
+    const match = normalizedEntries.find(([key]) => key === normalizeColumnName(candidate));
+    if (match) return match[1];
+  }
+
+  return undefined;
+}
+
 export const useBidangStats = ({
   username,
   bidang,
@@ -91,7 +123,12 @@ export const useBidangStats = ({
 
       if (response.success && response.data) {
         const data = response.data;
-        const computation = computeBidangScore(bidang, (column) => data[column], currentMonth);
+        const computation = computeBidangScore(
+          bidang,
+          (column) => readParameterValue(data, column),
+          currentMonth,
+          getBidangGroup(username),
+        );
         const params: Parameter[] = computation.breakdown.map((item: BidangParameterBreakdown) => ({
           id: item.column.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           label: item.column,
@@ -104,7 +141,12 @@ export const useBidangStats = ({
 
 
         setParameters(params);
-        setKumulatif(Math.round(computation.score * 10) / 10); // Round to 1 decimal
+        const finalScore = Number(data['Final Score'] ?? data['Final score'] ?? data['FinalScore']);
+        setKumulatif(
+          bidang === 'osram' && Number.isFinite(finalScore)
+            ? Math.round(finalScore * 10) / 10
+            : Math.round(computation.score * 10) / 10,
+        );
 
       } else {
     // No data found - set defaults with 0 values

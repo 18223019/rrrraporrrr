@@ -40,13 +40,13 @@ export const LoginPage = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #eadcc8 0%, #b9825b 100%)',
       padding: '1rem',
     }}>
       <div style={{
         maxWidth: '420px',
         width: '100%',
-        background: '#ffffff',
+        background: '#fffaf3',
         borderRadius: '1rem',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
         overflow: 'hidden',
@@ -59,17 +59,17 @@ export const LoginPage = () => {
           <h1 style={{
             fontSize: '1.5rem',
             fontWeight: '700',
-            color: '#111827',
+            color: '#4a2f22',
             margin: '0 0 0.5rem 0',
           }}>
             Rapor Anggota Asrama Salman
           </h1>
           <p style={{
             fontSize: '0.875rem',
-            color: '#6b7280',
+            color: '#765743',
             margin: 0,
           }}>
-            Virtue Wisdom 2025/2026
+            Virtue Wisdom 2026/2027
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export const LoginPage = () => {
               display: 'block',
               fontSize: '0.875rem',
               fontWeight: '600',
-              color: '#374151',
+              color: '#5f4030',
               marginBottom: '0.5rem',
             }}>
               Username
@@ -112,18 +112,18 @@ export const LoginPage = () => {
                 width: '100%',
                 padding: '0.75rem 1rem',
                 fontSize: '0.9375rem',
-                border: '1px solid #d1d5db',
+                border: '1px solid #c9a98d',
                 borderRadius: '0.5rem',
                 outline: 'none',
                 transition: 'all 0.2s',
                 boxSizing: 'border-box',
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.borderColor = '#9a6845';
+                e.target.style.boxShadow = '0 0 0 3px rgba(154, 104, 69, 0.16)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#d1d5db';
+                e.target.style.borderColor = '#c9a98d';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -178,7 +178,7 @@ export const LoginPage = () => {
               fontSize: '0.9375rem',
               fontWeight: '600',
               color: '#ffffff',
-              background: loading ? '#9ca3af' : '#111827',
+              background: loading ? '#b8a79a' : 'linear-gradient(135deg, #8b5e3c 0%, #a9744f 100%)',
               border: 'none',
               borderRadius: '0.5rem',
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -187,13 +187,13 @@ export const LoginPage = () => {
             }}
             onMouseEnter={(e) => {
               if (!loading) {
-                e.currentTarget.style.background = '#000000';
+                e.currentTarget.style.background = '#70452d';
                 e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
               }
             }}
             onMouseLeave={(e) => {
               if (!loading) {
-                e.currentTarget.style.background = '#111827';
+                e.currentTarget.style.background = 'linear-gradient(135deg, #8b5e3c 0%, #a9744f 100%)';
                 e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
               }
             }}
@@ -205,8 +205,8 @@ export const LoginPage = () => {
         {/* Footer */}
         <div style={{
           padding: '1rem 2rem 1.5rem 2rem',
-          background: '#f9fafb',
-          borderTop: '1px solid #e5e7eb',
+          background: '#f3e7d8',
+          borderTop: '1px solid #e3cdb7',
           textAlign: 'center',
         }}>
           <p style={{

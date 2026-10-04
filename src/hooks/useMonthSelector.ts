@@ -7,7 +7,7 @@ import { getAvailableMonths, type MonthOption, type ApiMeta } from '../services/
 import { useApiRoute } from './useApiRoute';
 
 const ENV_DEFAULT_MONTH = import.meta.env.VITE_DEFAULT_MONTH ?? '';
-const DEFAULT_ACADEMIC_MONTH = 'September25';
+const DEFAULT_ACADEMIC_MONTH = 'Agustus26';
 const MONTH_QUERY_KEYS = ['month', 'period'];
 
 type MonthSource = 'query' | 'storage' | 'environment' | 'default';
@@ -27,27 +27,13 @@ interface UseMonthSelectorReturn {
 }
 
 /**
- * Generate month options for academic year (Sept 2025 - Mei 2026)
+ * Generate the report periods for the current academic year.
  */
 function generateAcademicYearMonths(): MonthOption[] {
-  const months: MonthOption[] = [];
-  const monthNames = [
-    'September', 'Oktober', 'November', 'Desember', // 2025
-    'Januari', 'Februari', 'Maret', 'April', 'Mei'  // 2026
+  return [
+    { value: 'Agustus26', label: 'Agustus 2026', available: false },
+    { value: 'September26', label: 'September 2026', available: false },
   ];
-  
-  monthNames.forEach((month, index) => {
-    const year = index < 4 ? '25' : '26'; // Sept-Des = 25, Jan-Mei = 26
-    const fullYear = index < 4 ? '2025' : '2026';
-    
-    months.push({
-      value: `${month}${year}`,
-      label: `${month} ${fullYear}`,
-      available: false, // Will be updated from API
-    });
-  });
-  
-  return months;
 }
 
 const MONTH_BLUEPRINT = generateAcademicYearMonths();
@@ -128,7 +114,7 @@ function resolveInitialMonth(): InitialMonthInfo {
   return { value: DEFAULT_ACADEMIC_MONTH, source: 'default' };
 }
 
-export const useMonthSelector = (): UseMonthSelectorReturn => {
+export const useMonthSelector = (username?: string): UseMonthSelectorReturn => {
   const initialMonthInfoRef = useRef<InitialMonthInfo | null>(null);
   const clientHydratedRef = useRef(false);
 
@@ -149,11 +135,14 @@ export const useMonthSelector = (): UseMonthSelectorReturn => {
   }
 
   const [months, setMonths] = useState<MonthOption[]>(() => cloneMonthBlueprint());
-  const [selectedMonth, setSelectedMonthState] = useState<string>(() => initialMonthInfoRef.current!.value);
+  const initialMonth = username?.toLowerCase() === 'malikah' ? 'September26' : initialMonthInfoRef.current!.value;
+  const [selectedMonth, setSelectedMonthState] = useState<string>(() => initialMonth);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const apiRoute = useApiRoute();
-  const fallbackDefaultMonth = normaliseMonthValue(ENV_DEFAULT_MONTH) || DEFAULT_ACADEMIC_MONTH;
+  const fallbackDefaultMonth = username?.toLowerCase() === 'malikah'
+    ? 'September26'
+    : normaliseMonthValue(ENV_DEFAULT_MONTH) || DEFAULT_ACADEMIC_MONTH;
   
   // Wrapper to persist to localStorage when month changes
   const setSelectedMonth = (month: string, options: { persist?: boolean } = {}) => {
@@ -219,8 +208,28 @@ export const useMonthSelector = (): UseMonthSelectorReturn => {
         }
 
         if (response.success && response.data) {
-          const availabilityMap = new Map(response.data.map(month => [month.value, month.available]));
-          const availableValues = response.data.filter(month => month.available).map(month => month.value);
+          const allowedMonths = new Set(['Agustus26', 'September26']);
+          const isMalikah = username?.toLowerCase() === 'malikah';
+          const hasCurrentPeriodData = response.data.some(
+            (month) => allowedMonths.has(month.value),
+          );
+          const availableValuesFromApi = response.data
+            .filter((month) => allowedMonths.has(month.value))
+            .filter((month) => month.available && (!isMalikah || month.value === 'September26'))
+            .map((month) => month.value);
+          const availableValues = hasCurrentPeriodData
+            ? availableValuesFromApi
+            : (isMalikah ? ['September26'] : ['Agustus26', 'September26']);
+          const availabilityMap = new Map(
+            MONTH_BLUEPRINT.map((month) => [
+              month.value,
+              hasCurrentPeriodData
+                ? allowedMonths.has(month.value) && Boolean(
+                    response.data.find((item) => item.value === month.value)?.available,
+                  ) && (!isMalikah || month.value === 'September26')
+                : allowedMonths.has(month.value) && (!isMalikah || month.value === 'September26'),
+            ]),
+          );
 
           let storedMonth: string | null = null;
           try {
@@ -290,7 +299,7 @@ export const useMonthSelector = (): UseMonthSelectorReturn => {
     };
 
     fetchMonths();
-  }, [apiRoute.revision]); // Refetch when API routing changes
+  }, [apiRoute.revision, username]); // Refetch when API routing or member changes
   
   // Listen for localStorage changes from other tabs/windows
   useEffect(() => {

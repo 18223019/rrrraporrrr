@@ -1,5 +1,7 @@
 import {
   computeBidangScore,
+  getBidangRecordValue,
+  getBidangGroup,
   type BidangScoreComputation,
   type BidangType,
 } from '../data/bidangConfig';
@@ -10,21 +12,34 @@ export type DashboardRecord = Record<string, unknown> | null;
 
 export type BidangBreakdownMap = Record<BidangType, BidangScoreComputation>;
 
-export function calculateBidangBreakdown(record: DashboardRecord, month?: string): BidangBreakdownMap {
+const getDashboardValue = (record: Record<string, unknown>, column: string, month?: string) => {
+  if (month === 'Agustus26' && column === 'Takmir Harian') {
+    return record['Ketakmiran Astra'];
+  }
+  return getBidangRecordValue(record, column);
+};
+
+export function calculateBidangBreakdown(
+  record: DashboardRecord,
+  month?: string,
+  group = getBidangGroup(record?.Panggilan),
+): BidangBreakdownMap {
   if (!record) {
     return {
       ketakmiran: computeBidangScore('ketakmiran', () => null, month),
       pembinaan: computeBidangScore('pembinaan', () => null, month),
       aktualisasi: computeBidangScore('aktualisasi', () => null, month),
       internal: computeBidangScore('internal', () => null, month),
+      osram: computeBidangScore('osram', () => null, month),
     };
   }
 
   return {
-    ketakmiran: computeBidangScore('ketakmiran', (column) => record[column], month),
-    pembinaan: computeBidangScore('pembinaan', (column) => record[column], month),
-    aktualisasi: computeBidangScore('aktualisasi', (column) => record[column], month),
-    internal: computeBidangScore('internal', (column) => record[column], month),
+    ketakmiran: computeBidangScore('ketakmiran', (column) => getDashboardValue(record, column, month), month, group),
+    pembinaan: computeBidangScore('pembinaan', (column) => getDashboardValue(record, column, month), month, group),
+    aktualisasi: computeBidangScore('aktualisasi', (column) => getDashboardValue(record, column, month), month, group),
+    internal: computeBidangScore('internal', (column) => getDashboardValue(record, column, month), month, group),
+    osram: computeBidangScore('osram', (column) => getDashboardValue(record, column, month), month, group),
   };
 }
 
@@ -58,7 +73,13 @@ export function calculateStats(
   const latest = currentData;
   const bidangBreakdown = calculateBidangBreakdown(latest, currentMonth);
 
-  const averageScore =
+  const finalScoreValue = currentMonth === 'Agustus26'
+    ? latest['Final Score'] ?? latest['Final score'] ?? latest['FinalScore']
+    : undefined;
+  const finalScore = Number(finalScoreValue);
+  const averageScore = Number.isFinite(finalScore)
+    ? finalScore
+    :
     BIDANG_LIST.reduce((sum, bidang) => sum + bidangBreakdown[bidang].score, 0) /
     BIDANG_LIST.length;
 
@@ -66,7 +87,7 @@ export function calculateStats(
   if (historyData && historyData.length >= 2) {
   const previous = historyData[historyData.length - 2];
   const previousMonth = previous?.month ?? currentMonth;
-  const prevBreakdown = calculateBidangBreakdown(previous, previousMonth);
+  const prevBreakdown = calculateBidangBreakdown(previous, previousMonth, getBidangGroup(previous?.Panggilan));
     const previousAvg =
       BIDANG_LIST.reduce((sum, bidang) => sum + prevBreakdown[bidang].score, 0) /
       BIDANG_LIST.length;

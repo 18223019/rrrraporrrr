@@ -26,8 +26,12 @@ const NumberLike = z
   .union([z.string(), z.number(), z.null(), z.undefined()])
   .transform((value) => coerceNumber(value));
 
-const ScoreRecordSchema = z
-  .record(z.string(), z.union([NumberLike, z.string(), z.boolean(), z.null(), z.undefined()]))
+const ScoreRecordBaseSchema = z.record(
+  z.string(),
+  z.union([NumberLike, z.string(), z.boolean(), z.null(), z.undefined()]),
+);
+
+const ScoreRecordSchema = ScoreRecordBaseSchema
   .superRefine((data, ctx) => {
     // Ensure at minimum "Panggilan" exists so downstream UI can function
     if (typeof data.Panggilan !== 'string' || !data.Panggilan) {
@@ -42,7 +46,9 @@ const ScoresCollectionResponseSchema = z.object({
   success: z.boolean().optional().default(true),
   month: z.string().optional().nullable(),
   count: z.number().optional(),
-  data: z.array(ScoreRecordSchema),
+  // Collection responses can contain blank/header rows from Sheets. They are
+  // discarded after parsing; single-record responses remain strict below.
+  data: z.array(ScoreRecordBaseSchema),
   timestamp: z.string().optional(),
   cache: z.number().optional().nullable(),
 });
@@ -109,7 +115,7 @@ const HistoryResponseSchema = z.object({
 
 const CACHE_CONTROL_HEADER = 'public, s-maxage=60, stale-while-revalidate=300';
 const SNAPSHOT_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
-const UPSTREAM_TIMEOUT_MS = 6500;
+const UPSTREAM_TIMEOUT_MS = 20000;
 
 export const onRequest: PagesFunction<Env> = async (context) => {
   try {
@@ -249,7 +255,9 @@ function normalisePayload(resource: FetchResource, raw: unknown) {
       }
 
       const parsed = ScoresCollectionResponseSchema.parse(raw);
-      const data = parsed.data.map((record) => normaliseRecord(record));
+      const data = parsed.data
+        .filter((record) => typeof record.Panggilan === 'string' && record.Panggilan.trim() !== '')
+        .map((record) => normaliseRecord(record));
       return {
         ...parsed,
         count: parsed.count ?? data.length,
@@ -348,20 +356,9 @@ function createCacheKey(resource: FetchResource, params: URLSearchParams) {
 }
 
 async function writeSnapshot(env: Env, cacheKey: string, payload: unknown) {
-  if (!env.RAPOR_CACHE) {
-    return;
-  }
-
-  const envelope: SnapshotEnvelope<unknown> = {
-    cachedAt: new Date().toISOString(),
-    resource: cacheKey.split(':')[1]! as FetchResource,
-    params: Object.fromEntries(new URLSearchParams(cacheKey.split(':').slice(2).join(':'))),
-    payload,
-  };
-
-  await env.RAPOR_CACHE.put(cacheKey, JSON.stringify(envelope), {
-    expirationTtl: SNAPSHOT_TTL_SECONDS,
-  });
+  // Disabled on the free KV plan: writing a snapshot for every request
+  // exhausts the daily 1,000 KV put quota. HTTP/browser caching remains active.
+  return;
 }
 
 async function readSnapshot(env: Env, cacheKey: string) {
@@ -467,26 +464,8 @@ async function recordMetrics(
     success: boolean;
   },
 ) {
-  const store = env.RAPOR_CACHE;
-  if (!store) {
-    return;
-  }
-
-  const dateKey = new Date().toISOString().slice(0, 10);
-  const base = `metrics:${dateKey}:resource:${details.resource}`;
-
-  const keys: string[] = [`${base}:total`];
-  keys.push(`${base}:${details.snapshot ? 'snapshot' : 'live'}`);
-
-  if (details.canary) {
-    keys.push(`${base}:canary`);
-  }
-
-  if (!details.success) {
-    keys.push(`${base}:error`);
-  }
-
-  await Promise.all(keys.map((key) => incrementCounter(store, key, METRICS_TTL_SECONDS)));
+  // Metrics writes are disabled on the free KV plan to avoid quota exhaustion.
+  return;
 }
 
 async function incrementCounter(store: NonNullable<Env['RAPOR_CACHE']>, key: string, ttlSeconds: number) {

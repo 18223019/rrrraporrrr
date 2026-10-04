@@ -12,7 +12,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { computeBidangScore, type BidangType } from '../../data/bidangConfig';
+import { computeBidangScore, getBidangGroup, type BidangType } from '../../data/bidangConfig';
 import type { RankingMember } from '../../hooks/useRankings';
 
 interface CoachMemberDetailModalProps {
@@ -75,7 +75,12 @@ export const CoachMemberDetailModal: React.FC<CoachMemberDetailModalProps> = ({
     const breakdowns = React.useMemo(() => {
         if (!member) return [];
         return BIDANG_LIST.map(({ key, label, scoreKey, headerColor }) => {
-            const result = computeBidangScore(key, (col) => member.rawScore?.[col], month);
+            const result = computeBidangScore(
+                key,
+                (col) => member.rawScore?.[col],
+                month,
+                getBidangGroup(member.rawScore?.Panggilan),
+            );
             return { key, label, scoreKey, headerColor, result };
         });
     }, [member, month]);

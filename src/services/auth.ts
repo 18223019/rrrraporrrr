@@ -12,7 +12,7 @@ import { auth } from './firebase';
  * Email sintetis: {panggilan}@asrama.com
  */
 export const signIn = async (username: string, password: string): Promise<User> => {
-  const email = `${username}@asrama.com`;
+  const email = `${username.trim().toLowerCase()}@asrama.com`;
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
   return userCredential.user;
 };

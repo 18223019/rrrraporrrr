@@ -59,7 +59,7 @@
   flex-direction: column;
   
   /* Liquid Glass Effect (from reference) */
-  background: var(--glass-bg);
+  background: linear-gradient(145deg, rgba(255, 250, 243, 0.98), rgba(234, 220, 200, 0.92));
   backdrop-filter: blur(var(--glass-blur)) saturate(140%) contrast(105%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%) contrast(105%);
   box-shadow: var(--glass-shadow);
@@ -161,7 +161,7 @@ perbarui/* Animated Gradient Border (removed per request) */
 .bento-card-title {
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
-  color: #e8eef6;
+  color: #42291d;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -169,14 +169,14 @@ perbarui/* Animated Gradient Border (removed per request) */
 
 .bento-card-subtitle {
   font-size: var(--text-sm);
-  color: #9ca3af;
+  color: #765743;
   margin-top: 0.25rem;
 }
 
 .bento-card-icon {
   width: 1.25rem;
   height: 1.25rem;
-  color: #60a5fa;
+  color: var(--primary-400);
 }
 
 /* Card Body */
@@ -197,7 +197,7 @@ perbarui/* Animated Gradient Border (removed per request) */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #9ca3af;
+  color: #765743;
 }
 
 /* Category Color Accents - Liquid Glass Style */
@@ -247,13 +247,13 @@ perbarui/* Animated Gradient Border (removed per request) */
 
 /* Card Background Variants - Liquid Glass */
 .bento-card-gradient {
-  background: hsla(0, 0%, 100%, 0.12);
+  background: linear-gradient(145deg, rgba(255, 250, 243, 0.88), rgba(169, 116, 79, 0.32));
   backdrop-filter: blur(25px) saturate(160%);
   -webkit-backdrop-filter: blur(25px) saturate(160%);
 }
 
 .bento-card-primary {
-  background: hsla(250, 70%, 60%, 0.15);
+  background: linear-gradient(145deg, rgba(234, 220, 200, 0.72), rgba(112, 69, 45, 0.3));
   backdrop-filter: blur(var(--glass-blur)) saturate(150%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
 }
@@ -270,7 +270,7 @@ perbarui/* Animated Gradient Border (removed per request) */
 .gauge-card-title {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--text-secondary);
+  color: #765743;
   margin-bottom: 0.5rem;
   text-align: center;
 }
@@ -280,6 +280,16 @@ perbarui/* Animated Gradient Border (removed per request) */
   font-weight: var(--font-bold);
   font-variant-numeric: tabular-nums;
   margin-top: 0.5rem;
+}
+
+.bento-card .label,
+.bento-card .subtitle {
+  color: #765743;
+}
+
+.bento-card p,
+.bento-card [style*="color"] {
+  color: #664930 !important;
 }
 
 /* Profile Card Specific */
@@ -324,13 +334,13 @@ perbarui/* Animated Gradient Border (removed per request) */
 .profile-name {
   font-size: var(--text-2xl);
   font-weight: var(--font-bold);
-  color: var(--text-primary);
+  color: #42291d;
 
 }
 
 .profile-username {
   font-size: var(--text-base);
-  color: var(--text-tertiary);
+  color: #765743;
 }
 
 /* KPI Card Specific */
@@ -345,13 +355,13 @@ perbarui/* Animated Gradient Border (removed per request) */
   font-weight: var(--font-medium);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
-  color: var(--text-tertiary);
+  color: #765743;
 }
 
 .kpi-value {
   font-size: var(--text-3xl);
   font-weight: var(--font-bold);
-  color: var(--text-primary);
+  color: #42291d;
   font-variant-numeric: tabular-nums;
 }
 

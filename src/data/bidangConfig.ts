@@ -1,6 +1,7 @@
 import type { ScoreRecord } from '../services/api';
 
-export type BidangType = 'ketakmiran' | 'pembinaan' | 'aktualisasi' | 'internal';
+export type BidangType = 'ketakmiran' | 'pembinaan' | 'aktualisasi' | 'internal' | 'osram';
+export type BidangGroup = 'astra' | 'astri';
 
 export interface BidangParameterConfig {
   column: string;
@@ -23,6 +24,50 @@ export interface BidangScoreComputation {
 }
 
 type BidangConfigMap = Record<BidangType, ReadonlyArray<BidangParameterConfig>>;
+
+const ASTRA_USERNAMES = new Set([
+  'Aji', 'Aufa', 'Daffa', 'Galang', 'Hafizh', 'Hamdan', 'Hanif', 'Irshad', 'Tahmid', 'Yazid',
+  'Abdi', 'Altha', 'Erza', 'Ghaffar', 'Ibrahim', 'Joni', 'Faris', 'Fatih', 'Nabil', 'Syafiq',
+]);
+
+const ASTRI_USERNAMES = new Set([
+  'Aisyah', 'Aliynt', 'Berlia', 'Arin', 'Hazu', 'Haura', 'Nabila', 'Maisya', 'Raisya', 'Raudah',
+  'Dea', 'Adila', 'Anisa', 'Malikah', 'Haya', 'Auni', 'Nana', 'Rafa', 'Salwa', 'Sofi',
+]);
+
+export const getBidangGroup = (username: unknown): BidangGroup | undefined => {
+  if (typeof username !== 'string') return undefined;
+  if (ASTRA_USERNAMES.has(username)) return 'astra';
+  if (ASTRI_USERNAMES.has(username)) return 'astri';
+  return undefined;
+};
+
+export const getBidangColumnAliases = (column: string): string[] => {
+  if (column === 'Inspirasi Subuh') return ['Insipirasi Subuh'];
+  if (column === 'SSD ketakmiran') return ['SSD Ketakmiran'];
+  return [];
+};
+
+export const getBidangRecordValue = (
+  record: Record<string, unknown>,
+  column: string,
+): unknown => {
+  const candidates = [column, ...getBidangColumnAliases(column)];
+  const entries = Object.entries(record);
+
+  for (const candidate of candidates) {
+    const exact = record[candidate];
+    if (exact !== undefined) return exact;
+
+    const normalizedCandidate = candidate.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const match = entries.find(([key]) =>
+      key.toLowerCase().replace(/[^a-z0-9]+/g, '') === normalizedCandidate,
+    );
+    if (match) return match[1];
+  }
+
+  return undefined;
+};
 
 const configDebugLog = (() => {
   const logged = new Set<string>();
@@ -52,18 +97,14 @@ const LEGACY_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
   ],
   pembinaan: [
     { column: 'Tahfidz', weight: 20 },
-    { column: 'Tahsin', weight: 35 },
-    { column: 'Tadabbur', weight: 15 },
+    { column: 'Tahsin', weight: 30 },
+    { column: 'Tadabbur', weight: 20 },
     { column: 'Kumsub', weight: 30 },
   ],
   aktualisasi: [
-    { column: 'Eksplorasi Diri', weight: 30 },
-    { column: 'Update Profil', weight: 30 },
-    { column: 'Usroh/Asra Visit', weight: 5 },
-    { column: 'Asra Bercerita', weight: 10 },
-    { column: 'English Day', weight: 10 },
-    { column: 'Mentoring 1o1', weight: 10 },
-    { column: 'Asra Talk', weight: 5 },
+    { column: 'Wisdom Journey', weight: 50 },
+    { column: 'English Day', weight: 20 },
+    { column: 'Asra Talk', weight: 30 },
   ],
   internal: [
     { column: 'Piket Harian', weight: 30 },
@@ -72,6 +113,24 @@ const LEGACY_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
     { column: 'Family Time', weight: 10 },
     { column: 'EmCeKa Time', weight: 10 },
     { column: 'HTH (Coaching)', weight: 10 },
+  ],
+  osram: [
+    { column: 'Kegiatan Osram', weight: 18 },
+    { column: 'Kumsub Agustus', weight: 18 },
+    { column: 'Challenge Kamar', weight: 13 },
+    { column: 'Wawancara Karyawan', weight: 8 },
+    { column: '50 Mimpi', weight: 8 },
+    { column: 'Resume', weight: 7 },
+    { column: 'Feedback (AHA)', weight: 5 },
+    { column: 'Fiqh Interaksi', weight: 2.875 },
+    { column: 'ALIP', weight: 2.875 },
+    { column: 'Pemulsaran Jenazah', weight: 2.875 },
+    { column: 'Utilitas Air', weight: 2.875 },
+    { column: 'Utilitas Listrik', weight: 2.875 },
+    { column: 'Temu Bidang I', weight: 2.875 },
+    { column: 'Temu Bidang II', weight: 2.875 },
+    { column: 'Temu Bidang III', weight: 2.875 },
+    { column: 'Takmir Harian', weight: 12 },
   ],
 };
 
@@ -101,6 +160,51 @@ const NOVEMBER25_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
   ],
 };
 
+const SEPTEMBER26_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
+  ...LEGACY_BIDANG_PARAMETER_CONFIG,
+  ketakmiran: [
+    { column: 'Takmir Harian', weight: 60 },
+    { column: 'Takmir Event', weight: 17.5 },
+    { column: 'Insipirasi Subuh', weight: 12.5 },
+  ],
+  pembinaan: [
+    { column: 'Tahfidz', weight: 20 },
+    { column: 'Tahsin', weight: 30 },
+    { column: 'Fiqh', weight: 20 },
+    { column: 'Kumsub', weight: 30 },
+  ],
+  aktualisasi: [
+    { column: 'Wisdom Journey', weight: 50 },
+    { column: 'English Day', weight: 20 },
+    { column: 'Asra Talk', weight: 30 },
+  ],
+};
+
+const SEPTEMBER26_ASTRI_KETAKMIRAN_CONFIG: ReadonlyArray<BidangParameterConfig> = [
+  { column: 'Takmir Harian', weight: 60 },
+  { column: 'Takmir Event', weight: 12.5 },
+  { column: 'Insipirasi Subuh', weight: 17.5 },
+];
+
+const AGUSTUS26_OSRAM_CONFIG: ReadonlyArray<BidangParameterConfig> = [
+  { column: 'Kegiatan Osram', weight: 18 },
+  { column: 'Kumsub Agustus', weight: 18 },
+  { column: 'Challenge Kamar', weight: 13 },
+  { column: 'Wawancara Karyawan', weight: 8 },
+  { column: '50 Mimpi', weight: 8 },
+  { column: 'Resume', weight: 7 },
+  { column: 'Feedback (AHA)', weight: 5 },
+  { column: 'Fiqh Interaksi', weight: 2.875 },
+  { column: 'ALIP', weight: 2.875 },
+  { column: 'Pemulsaran Jenazah', weight: 2.875 },
+  { column: 'Utilitas Air', weight: 2.875 },
+  { column: 'Utilitas Listrik', weight: 2.875 },
+  { column: 'Temu Bidang I', weight: 2.875 },
+  { column: 'Temu Bidang II', weight: 2.875 },
+  { column: 'Temu Bidang III', weight: 2.875 },
+  { column: 'Takmir Harian', weight: 12 },
+];
+
 const MONTH_NAME_INDEX: Record<string, number> = {
   januari: 1,
   februari: 2,
@@ -118,6 +222,7 @@ const MONTH_NAME_INDEX: Record<string, number> = {
 
 const OKTOBER25_CUTOFF_KEY = parseMonthKey('Oktober25');
 const NOVEMBER25_CUTOFF_KEY = parseMonthKey('November25');
+const SEPTEMBER26_CUTOFF_KEY = parseMonthKey('September26');
 
 function parseMonthKey(month?: string): number | null {
   if (!month) {
@@ -147,8 +252,20 @@ function parseMonthKey(month?: string): number | null {
 export const getBidangParameterConfig = (
   bidang: BidangType,
   month?: string,
+  group?: BidangGroup,
 ): ReadonlyArray<BidangParameterConfig> => {
+  if (bidang === 'osram' && month === 'Agustus26') {
+    return AGUSTUS26_OSRAM_CONFIG;
+  }
+
   const parsedKey = parseMonthKey(month);
+
+  if (parsedKey !== null && SEPTEMBER26_CUTOFF_KEY !== null && parsedKey >= SEPTEMBER26_CUTOFF_KEY) {
+    if (bidang === 'ketakmiran' && group === 'astri') {
+      return SEPTEMBER26_ASTRI_KETAKMIRAN_CONFIG;
+    }
+    return SEPTEMBER26_BIDANG_PARAMETER_CONFIG[bidang];
+  }
 
   if (parsedKey !== null && OKTOBER25_CUTOFF_KEY !== null && parsedKey < OKTOBER25_CUTOFF_KEY) {
     configDebugLog(bidang, month, parsedKey, 'legacy');
@@ -181,8 +298,9 @@ const computeBidangScoreInternal = (
   bidang: BidangType,
   getter: (column: string) => unknown,
   month?: string,
+  group?: BidangGroup,
 ): BidangScoreComputation => {
-  const config = getBidangParameterConfig(bidang, month);
+  const config = getBidangParameterConfig(bidang, month, group);
   const breakdown: BidangParameterBreakdown[] = [];
   let weightedSum = 0;
   let activeWeight = 0;
@@ -230,25 +348,29 @@ export const computeBidangScore = (
   bidang: BidangType,
   getter: (column: string) => unknown,
   month?: string,
-): BidangScoreComputation => computeBidangScoreInternal(bidang, getter, month);
+  group?: BidangGroup,
+): BidangScoreComputation => computeBidangScoreInternal(bidang, getter, month, group);
 
 export const calculateBidangWeightedScore = (
   bidang: BidangType,
   getter: (column: string) => unknown,
   month?: string,
-): number => computeBidangScoreInternal(bidang, getter, month).score;
+  group?: BidangGroup,
+): number => computeBidangScoreInternal(bidang, getter, month, group).score;
 
 export const calculateBidangWeightedScoreFromRecord = (
   bidang: BidangType,
   record: Partial<Record<string, unknown>> | ScoreRecord,
   month?: string,
-): number => computeBidangScoreInternal(bidang, (column) => record[column], month).score;
+  group?: BidangGroup,
+): number => computeBidangScoreInternal(bidang, (column) => record[column], month, group).score;
 
 export const getBidangParameterBreakdown = (
   bidang: BidangType,
   getter: (column: string) => unknown,
   month?: string,
-): BidangParameterBreakdown[] => computeBidangScoreInternal(bidang, getter, month).breakdown;
+  group?: BidangGroup,
+): BidangParameterBreakdown[] => computeBidangScoreInternal(bidang, getter, month, group).breakdown;
 
 export const getBidangTotalWeight = (bidang: BidangType, month?: string): number => {
   return getBidangParameterConfig(bidang, month).reduce((sum, item) => sum + item.weight, 0);

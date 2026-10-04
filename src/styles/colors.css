@@ -4,28 +4,28 @@
  */
 
 :root {
-  /* Primary Palette - Purple/Indigo Gradient */
-  --primary-50: #f5f3ff;
-  --primary-100: #ede9fe;
-  --primary-200: #ddd6fe;
-  --primary-300: #c4b5fd;
-  --primary-400: #a78bfa;
-  --primary-500: #8b5cf6;
-  --primary-600: #7c3aed;
-  --primary-700: #6d28d9;
-  --primary-800: #5b21b6;
-  --primary-900: #4c1d95;
+  /* Primary Palette - Cream and Brown */
+  --primary-50: #ffdbbb;
+  --primary-100: #CCBEB1;
+  --primary-200: #CCBEB1;
+  --primary-300: #997e67;
+  --primary-400: #997e67;
+  --primary-500: #997e67;
+  --primary-600: #664930;
+  --primary-700: #664930;
+  --primary-800: #664930;
+  --primary-900: #664930;
 
   /* Bidang Colors - Category Identification */
-  --ketakmiran: #3b82f6;    /* Blue - Spirituality */
-  --pembinaan: #10b981;      /* Green - Development */
-  --aktualisasi: #8b5cf6;    /* Purple - Self Actualization */
-  --internal: #f59e0b;       /* Orange - Internal Affairs */
+  --ketakmiran: #8b5e3c;
+  --pembinaan: #a9744f;
+  --aktualisasi: #b9825b;
+  --internal: #c08a5b;
 
   /* Gauge Performance Zones */
-  --gauge-danger: #ef4444;   /* Red - Below 60 */
-  --gauge-warning: #f59e0b;  /* Yellow/Amber - 60-80 */
-  --gauge-success: #10b981;  /* Green - Above 80 */
+  --gauge-danger: #9b4f3f;
+  --gauge-warning: #b87845;
+  --gauge-success: #6f8555;
   
   /* Gauge Neutral */
   --gauge-neutral: #6b7280; /* Gray - No data/default */
@@ -58,8 +58,8 @@
   --bg-tertiary: #f3f4f6;
   
   /* Mesh Gradient Background */
-  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --bg-gradient-light: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  --bg-gradient: linear-gradient(135deg, #ffdbbb 0%, #997e67 100%);
+  --bg-gradient-light: linear-gradient(135deg, rgba(255, 219, 187, 0.8) 0%, rgba(204, 190, 177, 0.8) 100%);
 
   /* Text Colors */
   --text-primary: #111827;
@@ -86,13 +86,13 @@
 
 /* Dark Mode Variables - Liquid Glass Theme (Always Active) */
 :root {
-  --bg-primary: #0c0f14;
-  --bg-secondary: #1a1d24;
-  --bg-tertiary: #22252e;
-  --text-primary: #e8eef6;
-  --text-secondary: #9ca3af;
-  --text-tertiary: #6b7280;
-  --text-inverse: #111827;
+  --bg-primary: #664930;
+  --bg-secondary: #997e67;
+  --bg-tertiary: #CCBEB1;
+  --text-primary: #ffdbbb;
+  --text-secondary: #CCBEB1;
+  --text-tertiary: #ffdbbb;
+  --text-inverse: #664930;
   
   /* Override borders for dark theme */
   --border-light: rgba(255, 255, 255, 0.1);

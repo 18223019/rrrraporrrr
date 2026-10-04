@@ -90,10 +90,10 @@
 }
 
 .sidebar-nav-item.active {
-  background: var(--primary-50);
-  color: var(--text-inverse);
+  background: #f3e7d8;
+  color: #42291d;
   font-weight: var(--font-semibold);
-  text-shadow: 0 2px 12px rgba(139, 92, 246, 0.3);
+  text-shadow: 0 2px 12px rgba(112, 69, 45, 0.22);
 }
 
 .sidebar-nav-item-inner {

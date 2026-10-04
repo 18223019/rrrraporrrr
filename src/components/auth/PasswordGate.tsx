@@ -52,7 +52,7 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+         background: 'linear-gradient(135deg, #eadcc8 0%, #b9825b 100%)',
       padding: 'clamp(1rem, 6vw, 3rem)',
       boxSizing: 'border-box',
     }}>
@@ -131,6 +131,8 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({
                 onFocus={(e) => {
                   e.target.style.borderColor = '#667eea';
                   e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    e.target.style.borderColor = '#9a6845';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(154, 104, 69, 0.16)';
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = '#d1d5db';
@@ -185,7 +187,7 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({
             style={{
               width: '100%',
               padding: '0.75rem 1.5rem',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                 background: 'linear-gradient(135deg, #8b5e3c 0%, #a9744f 100%)',
               color: '#ffffff',
               fontSize: '1rem',
               fontWeight: '600',
@@ -204,7 +206,7 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({
               e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
             }}
           >
-            Buka Dashboard
+           Buka Dashboard
           </button>
 
           {/* Hint */}
@@ -214,7 +216,7 @@ export const PasswordGate: React.FC<PasswordGateProps> = ({
               paddingTop: '1.25rem',
               borderTop: '1px solid #e5e7eb',
               textAlign: 'center',
-              fontSize: '0.875rem',
+               fontSize: '0.875rem',
               color: '#6b7280',
               width: '100%',
               boxSizing: 'border-box',

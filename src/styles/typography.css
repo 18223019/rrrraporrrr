@@ -244,10 +244,8 @@ p {
 
 /* Special Typography Styles */
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-800) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffdbbb;
+  text-shadow: 0 2px 12px rgba(255, 219, 187, 0.2);
 }
 
 .text-mono {

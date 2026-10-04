@@ -18,7 +18,7 @@
 // CONFIGURATION
 // ========================================
 
-const SPREADSHEET_ID = "1WaK0XuJrP5adiJkL4KvR1LoPCOURPcIumAK1sKlA3j8";
+const SPREADSHEET_ID = "119JaNmuiLaYtmk96ibcV1kiNTaWQoAtWgKlx1nSV6tI";
 const CACHE_DURATION = 300; // 5 minutes in seconds
 const SHEET_METADATA = "metadata";
 
@@ -107,7 +107,8 @@ function getScores(month) {
 
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(month);
+    const sheetName = resolveSheetName(ss, month);
+    const sheet = sheetName ? ss.getSheetByName(sheetName) : null;
 
     if (!sheet) {
       return {
@@ -148,15 +149,27 @@ function getScoreByName(month, name) {
   const cached = getCachedData(cacheKey);
   if (cached) return cached;
 
-  const allScores = getScores(month);
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetNames = month === 'Agustus26'
+    ? ['Agustus26_Astra', 'Agustus26_Astri']
+    : getSheetNameCandidates(month)
+        .map((candidate) => resolveSheetName(ss, candidate))
+        .filter((candidate, index, candidates) => candidate && candidates.indexOf(candidate) === index);
+  let record = null;
+  let resolvedMonth = month;
 
-  if (allScores.error) {
-    return allScores;
+  for (const sheetName of sheetNames) {
+    const allScores = getScores(sheetName);
+    if (allScores.error) continue;
+    record = allScores.data.find((r) => {
+      const recordName = r.Panggilan || r.Panaggilan || r.Username || r.username;
+      return recordName && recordName.toString().trim().toLowerCase() === name.toString().trim().toLowerCase();
+    });
+    if (record) {
+      resolvedMonth = sheetName;
+      break;
+    }
   }
-
-  const record = allScores.data.find(
-    (r) => r.Panggilan && r.Panggilan.toLowerCase() === name.toLowerCase()
-  );
 
   if (!record) {
     return {
@@ -168,7 +181,7 @@ function getScoreByName(month, name) {
 
   const response = {
     success: true,
-    month: month,
+    month: resolvedMonth,
     name: name,
     data: record,
     timestamp: new Date().toISOString(),
@@ -195,12 +208,14 @@ function getHistory(name, months = 3) {
       .map((s) => s.getName())
       .filter((n) =>
         n.match(
-          /^(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\d{2}$/
+          /^(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\d{2}(?:\d{2})?(?:_(?:Astra|Astri))?$/
         )
       )
       .map((n) => {
-        const m = n.match(/^([A-Za-z]+)(\d{2})$/);
-        return { name: n, m: monthIndex(m[1]), y: parseInt(`20${m[2]}`, 10) };
+        const baseName = n.replace(/_(?:Astra|Astri)$/, '');
+        const m = baseName.match(/^([A-Za-z]+)(\d{2})(\d{2})?$/);
+        const year = m[3] ? parseInt(`${m[2]}${m[3]}`, 10) : parseInt(`20${m[2]}`, 10);
+        return { name: n, m: monthIndex(m[1]), y: year };
       })
       .sort((a, b) => a.y - b.y || a.m - b.m)
       .slice(-months)
@@ -351,26 +366,31 @@ function listAvailableMonthsWithLabels() {
       .map((s) => s.getName())
       .filter((n) =>
         n.match(
-          /^(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\d{2}$/
+          /^(Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember)\d{2}(?:\d{2})?$/
         )
       );
 
     const academicMonths = [
-      "September25",
-      "Oktober25",
-      "November25",
-      "Desember25",
-      "Januari26",
-      "Februari26",
-      "Maret26",
-      "April26",
-      "Mei26",
+      "Agustus26",
+      "September26",
+      "Oktober26",
+      "November26",
+      "Desember26",
+      "Januari27",
+      "Februari27",
+      "Maret27",
+      "April27",
+      "Mei27",
     ];
 
     const months = academicMonths.map((monthKey) => ({
       value: monthKey,
       label: labelFromKey(monthKey),
-      available: availableSheets.includes(monthKey),
+      available:
+        availableSheets.includes(monthKey) ||
+      availableSheets.includes(longMonthKey(monthKey)) ||
+        availableSheets.includes(`${monthKey}_Astra`) ||
+        availableSheets.includes(`${monthKey}_Astri`),
     }));
 
     const response = {
@@ -395,6 +415,34 @@ function listAvailableMonthsWithLabels() {
 // HELPER FUNCTIONS
 // ========================================
 
+function getSheetNameCandidates(month) {
+  const normalized = String(month || '').trim();
+  const candidates = [normalized];
+
+  if (normalized === 'September26') {
+    candidates.push('September2026');
+  } else if (normalized === 'September2026') {
+    candidates.push('September26');
+  }
+
+  return candidates;
+}
+
+function resolveSheetName(spreadsheet, month) {
+  const candidates = getSheetNameCandidates(month);
+  for (const candidate of candidates) {
+    if (spreadsheet.getSheetByName(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function longMonthKey(monthKey) {
+  const match = String(monthKey || '').match(/^([A-Za-z]+)(\d{2})$/);
+  return match ? `${match[1]}20${match[2]}` : String(monthKey || '');
+}
+
 function readSheetMatrix(sheet) {
   const range = sheet.getDataRange();
   const values = range.getValues();
@@ -403,8 +451,29 @@ function readSheetMatrix(sheet) {
     return { headers: [], rows: [] };
   }
 
-  const headers = values[0];
-  const rows = values.slice(1);
+  // Agustus26_Astra/Astri use a multi-row header. Select the row that
+  // contains the member identity columns instead of assuming row one.
+  let headerIndex = 0;
+  for (let index = 0; index < Math.min(values.length, 10); index += 1) {
+    const row = values[index].map((value) => String(value || '').trim().toLowerCase());
+    if (row.includes('panggilan') || row.includes('panaggilan') || row.includes('username')) {
+      headerIndex = index;
+      break;
+    }
+  }
+
+  const headers = values[headerIndex].map((header) => {
+    const normalized = String(header || '').trim();
+    const compact = normalized.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    if (normalized === 'Nama Lengkap') return 'Nama';
+    if (compact === 'panggilan' || compact === 'panaggilan' || compact === 'username') {
+      return 'Panggilan';
+    }
+    return normalized;
+  });
+  const rows = values.slice(headerIndex + 1).filter((row) =>
+    row.some((value) => String(value || '').trim() !== '')
+  );
 
   return { headers, rows };
 }
@@ -559,7 +628,7 @@ function triggerRevalidateDashboard(month, slug, options) {
       success: false,
       skipped: true,
       reason: "Revalidate endpoint not configured",
-      month: month,
+      month: resolvedMonth,
       slug: slug || "",
     };
   }
@@ -826,8 +895,10 @@ function sendRaporEmail(member, score, month) {
             <p style="color: #b91c1c; font-weight: 600;">⚠️ Harap menjaga kerahasiaan akun kamu ya! Jika kamu merasa mengalami kebocoran data, segera hubungi coach.</p>
             <p>Terus semangat dalam meniti perjalanan di asrama! Semoga setiap langkahmu menjadi amal kebaikan dan hikmah yang berharga.</p>
             <p>Dan satu lagi… <strong>SEMANGAT UTS NYAA!!!</strong></p>
+            <p style="margin-top: 24px;">Have a nice day ^^</p>
             <p style="margin-top: 24px;">Wassalamu’alaikum warahmatullahi wabarakatuh.</p>
-            <p style="margin-top: 24px;">Best Regards,<br><strong>Coach Asrama 25/26</strong></p>
+            <p style="margin-top: 24px;">Best Regards,<br><strong>Coach Asrama 26/27</strong></p>
+            
           </div>
           <div class="footer">
             Email otomatis – mohon tidak membalas email ini.<br>
@@ -863,11 +934,12 @@ Password bersifat pribadi dan tidak boleh dibagikan kepada siapa pun.
 Terus semangat dalam meniti perjalanan di asrama!
 Semoga setiap langkahmu menjadi amal kebaikan dan hikmah yang berharga.
 Dan satu lagi… SEMANGAT UTS NYAA!!!
+Have a nice day^^
 
 Wassalamu’alaikum warahmatullahi wabarakatuh.
 
 Best Regards,
-Coach Asrama 25/26
+Coach Asrama 26/27
 
 --
 Email otomatis – mohon tidak membalas email ini.`;
@@ -896,12 +968,12 @@ Email otomatis – mohon tidak membalas email ini.`;
 // ========================================
 
 function testGetScores() {
-  const result = getScores("Oktober25");
+  const result = getScores("September26");
   Logger.log(JSON.stringify(result, null, 2));
 }
 
 function testGetScoreByName() {
-  const result = getScoreByName("Oktober25", "John");
+  const result = getScoreByName("September26", "John");
   Logger.log(JSON.stringify(result, null, 2));
 }
 
@@ -921,20 +993,20 @@ function testSendEmail() {
     const testMember = members.data[0];
     const scores = getScores("Oktober25");
     if (scores.success && scores.data.length > 0) {
-      const result = sendRaporEmail(testMember, scores.data[0], "Oktober25");
+      const result = sendRaporEmail(testMember, scores.data[0], "September26");
       Logger.log("Email sent: " + result);
     }
   }
 }
 
 function testEmailBlast() {
-  const result = sendMonthlyRapor("September25");
+  const result = sendMonthlyRapor("September26");
   Logger.log(JSON.stringify(result, null, 2));
 }
 
-function testSendEmailToAndrereza() {
-  const targetMonth = "September25";
-  const targetEmail = "andrerezaatik@gmail.com";
+function testSendEmailToAqeela() {
+  const targetMonth = "September26";
+  const targetEmail = "aqeelaamin25@gmail.com";
 
   const members = getMembers();
   if (!members.success) {

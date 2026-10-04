@@ -31,6 +31,10 @@ const bidangConfig = {
     title: 'Internal',
     color: 'internal'
   },
+  osram: {
+    title: 'Osram',
+    color: 'osram'
+  },
 };
 
 const glowColorMap: Record<BidangType, string> = {
@@ -38,6 +42,7 @@ const glowColorMap: Record<BidangType, string> = {
   pembinaan: 'rgba(16, 185, 129, 0.55)',
   aktualisasi: 'rgba(139, 92, 246, 0.55)',
   internal: 'rgba(245, 158, 11, 0.55)',
+  osram: 'rgba(153, 126, 103, 0.55)',
 };
 
 export const BidangDetailPage: React.FC = () => {
@@ -47,7 +52,7 @@ export const BidangDetailPage: React.FC = () => {
   const { profile } = useUserProfile();
   
   // Get selected month from month selector
-  const { selectedMonth } = useMonthSelector();
+  const { selectedMonth } = useMonthSelector(profile?.username);
   
   // Get bidang configuration
   const currentBidang = bidang as BidangType;
@@ -140,7 +145,7 @@ export const BidangDetailPage: React.FC = () => {
             }}>
               {kumulatif.toFixed(1)}
             </div>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#664930', textAlign: 'center' }}>
               Nilai akhir dari {activeParameters.length} / {parameters.length} parameter aktif
             </div>
             {inactiveParameters.length > 0 && (
@@ -148,14 +153,14 @@ export const BidangDetailPage: React.FC = () => {
                 style={{
                   marginTop: '0.75rem',
                   fontSize: '0.85rem',
-                  color: 'var(--text-tertiary)',
+                  color: '#664930',
                   textAlign: 'center',
                   lineHeight: 1.4,
                 }}
               >
                 Bobot disesuaikan karena belum ada nilai untuk:
                 <br />
-                <span style={{ color: 'var(--text-secondary)' }}>
+                <span style={{ color: '#664930', fontWeight: 600 }}>
                   {inactiveParameters.map((param) => param.label).join(', ')}
                 </span>
               </div>
@@ -184,12 +189,12 @@ export const BidangDetailPage: React.FC = () => {
                     display: 'grid',
                     gap: '0.25rem',
                     fontSize: '0.8rem',
-                    color: 'var(--text-tertiary)',
+                    color: '#664930',
                   }}
                 >
                   <div>
                     Bobot dasar:{' '}
-                    <span style={{ color: 'var(--text-secondary)' }}>
+                      <span style={{ color: '#664930', fontWeight: 600 }}>
                       {formatPercent(
                         totalOriginalWeight > 0
                           ? (param.originalWeight / totalOriginalWeight) * 100
@@ -208,10 +213,10 @@ export const BidangDetailPage: React.FC = () => {
                     <div style={{ display: 'grid', gap: '0.15rem' }}>
                       <div>
                         Bobot aktif:{' '}
-                        <span style={{ color: 'var(--text-secondary)' }}>0%</span>
+                        <span style={{ color: '#664930', fontWeight: 600 }}>0%</span>
                       </div>
                       <div>
-                        <span style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ color: '#664930', fontWeight: 600 }}>
                           Bobot dialihkan ke parameter lain
                         </span>
                       </div>
@@ -238,7 +243,7 @@ export const BidangDetailPage: React.FC = () => {
                   </div>
                   <div style={{
                     fontSize: '0.875rem',
-                    color: '#6b7280',
+                    color: '#664930',
                     textAlign: 'center',
                     fontStyle: 'italic'
                   }}>
@@ -247,7 +252,7 @@ export const BidangDetailPage: React.FC = () => {
                   <div
                     style={{
                       fontSize: '0.775rem',
-                      color: 'var(--text-tertiary)',
+                      color: '#664930',
                       textAlign: 'center',
                       lineHeight: 1.3,
                     }}

@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 interface BentoCardProps {
   children: React.ReactNode;
   size?: 'large' | 'medium' | 'small' | 'wide' | 'tall' | 'profile' | 'kpi' | 'chart';
-  category?: 'ketakmiran' | 'pembinaan' | 'aktualisasi' | 'internal';
+  category?: 'ketakmiran' | 'pembinaan' | 'aktualisasi' | 'internal' | 'osram';
   title?: string;
   subtitle?: string;
   icon?: React.ReactNode;

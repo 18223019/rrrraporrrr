@@ -7,18 +7,18 @@ import { useState, useEffect } from 'react';
 import { getScores, getMembers } from '../services/api';
 import type { ScoreRecord, Member } from '../services/api';
 import { useApiRoute } from './useApiRoute';
-import { computeBidangScore } from '../data/bidangConfig';
+import { computeBidangScore, getBidangRecordValue, getBidangGroup } from '../data/bidangConfig';
 
 // List Ikhwan (Astra) usernames - dari memberNames.ts
 const IKHWAN_USERNAMES = [
-  'Alif', 'Mamad', 'AF', 'Dio', 'Ditok', 'Ilham', 'Icad', 'Uwais', 'Zamil', 'Riki',
-  'Aji', 'Aufa', 'Daffa', 'Galang', 'Hafizh', 'Hamdan', 'Hanif', 'Irshad', 'Tahmid', 'Yazid'
+  'Aji', 'Aufa', 'Daffa', 'Galang', 'Hafizh', 'Hamdan', 'Hanif', 'Irshad', 'Tahmid', 'Yazid',
+  'Abdi', 'Altha' , 'Erza', 'Ghaffar', 'Ibrahim', 'Joni', 'Faris', 'Fatih', 'Nabil', 'Syafiq'
 ];
 
 // List Akhwat (Astri) usernames - dari memberNames.ts
 const AKHWAT_USERNAMES = [
-  'Aqeela', 'Amal', 'Annisa', 'Izza', 'Khansa', 'Kuny', 'Aza', 'Yara', 'Nisa', 'Tifa',
-  'Aisyah', 'Aliynt', 'Berlia', 'Arin', 'Hazu', 'Haura', 'Nabila', 'Najma', 'Raisya', 'Raudah'
+  'Aisyah', 'Aliynt', 'Berlia', 'Arin', 'Hazu', 'Haura', 'Nabila', 'Maisya', 'Raisya', 'Raudah',
+  'Dea', 'Adila', 'Anisa', 'Malikah', 'Haya', 'Auni', 'Nana', 'Rafa', 'Salwa', 'Sofi'
 ];
 
 export interface RankingMember {
@@ -40,6 +40,15 @@ export interface RankingsData {
   month: string;
 }
 
+const getAugustSheetName = (month: string, group: 'astra' | 'astri') =>
+  month === 'Agustus26' ? `${month}_${group === 'astra' ? 'Astra' : 'Astri'}` : month;
+
+const getAugustFinalScore = (score: ScoreRecord): number | null => {
+  const value = score['Final Score'] ?? score['Final score'] ?? score['FinalScore'];
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+};
+
 export const useRankings = (month: string) => {
   const apiRoute = useApiRoute();
   const [rankings, setRankings] = useState<RankingsData | null>(null);
@@ -58,17 +67,24 @@ export const useRankings = (month: string) => {
         setLoading(true);
         setError(null);
 
-        // Fetch scores dan members
-        const [scoresResponse, membersResponse] = await Promise.all([
-          getScores(month),
+        // Agustus uses separate Astra/Astri sheets; other months use one sheet.
+        const isAugust = month === 'Agustus26';
+        const [astraScoresResponse, astriScoresResponse, membersResponse] = await Promise.all([
+          getScores(getAugustSheetName(month, 'astra')),
+          getScores(isAugust ? getAugustSheetName(month, 'astri') : month),
           getMembers(),
         ]);
 
-        if (!scoresResponse.success || !membersResponse.success) {
+        if (!astraScoresResponse.success || !astriScoresResponse.success || !membersResponse.success) {
           throw new Error('Failed to fetch data');
         }
 
-        const scores = scoresResponse.data;
+        const scores = isAugust
+          ? [
+              ...astraScoresResponse.data.map((score) => ({ score, group: 'astra' as const })),
+              ...astriScoresResponse.data.map((score) => ({ score, group: 'astri' as const })),
+            ]
+          : astraScoresResponse.data.map((score) => ({ score, group: undefined }));
         const members = membersResponse.data;
 
         // Create map untuk lookup member details
@@ -99,14 +115,16 @@ export const useRankings = (month: string) => {
           rawScore: ScoreRecord;
         }> = [];
 
-        scores.forEach((score: ScoreRecord) => {
+        scores.forEach(({ score, group: sourceGroup }) => {
           const username = score.Panggilan;
           const member = memberMap.get(username);
+          const scoreGroup = sourceGroup ?? getBidangGroup(username);
           
-          const ketakmiranResult = computeBidangScore('ketakmiran', (column) => score[column], month);
-          const pembinaanResult = computeBidangScore('pembinaan', (column) => score[column], month);
-          const aktualisasiResult = computeBidangScore('aktualisasi', (column) => score[column], month);
-          const internalResult = computeBidangScore('internal', (column) => score[column], month);
+          const readScoreValue = (column: string) => getBidangRecordValue(score, column);
+          const ketakmiranResult = computeBidangScore('ketakmiran', readScoreValue, month, scoreGroup);
+          const pembinaanResult = computeBidangScore('pembinaan', readScoreValue, month, scoreGroup);
+          const aktualisasiResult = computeBidangScore('aktualisasi', readScoreValue, month, scoreGroup);
+          const internalResult = computeBidangScore('internal', readScoreValue, month, scoreGroup);
 
           const bidangResults = [
             ketakmiranResult,
@@ -117,9 +135,12 @@ export const useRankings = (month: string) => {
           
           // OVERALL SCORE: Average of bidang yang memiliki data aktif (aktif weight > 0)
           const bidangWithData = bidangResults.filter((result) => result.activeWeight > 0);
-          const totalScore = bidangWithData.length > 0
+          const computedScore = bidangWithData.length > 0
             ? bidangWithData.reduce((acc, result) => acc + result.score, 0) / bidangWithData.length
             : 0;
+          const totalScore = month === 'Agustus26'
+            ? getAugustFinalScore(score) ?? computedScore
+            : computedScore;
 
           if (!member) {
             console.warn(`⚠️ [useRankings] Member not found: ${username}`);
@@ -137,9 +158,9 @@ export const useRankings = (month: string) => {
             rawScore: score,
           };
 
-          if (IKHWAN_USERNAMES.includes(username)) {
+          if (sourceGroup === 'astra' || IKHWAN_USERNAMES.includes(username)) {
             astraScores.push(scoreData);
-          } else if (AKHWAT_USERNAMES.includes(username)) {
+          } else if (sourceGroup === 'astri' || AKHWAT_USERNAMES.includes(username)) {
             astriScores.push(scoreData);
           }
         });

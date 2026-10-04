@@ -19,7 +19,7 @@ interface GaugeChartProps {
   min?: number;
   label?: string;
   unit?: string;
-  category?: 'ketakmiran' | 'pembinaan' | 'aktualisasi' | 'internal';
+  category?: 'ketakmiran' | 'pembinaan' | 'aktualisasi' | 'internal' | 'osram';
   size?: 'small' | 'medium' | 'large';
   showValue?: boolean;
   animated?: boolean;
@@ -30,15 +30,17 @@ interface GaugeChartProps {
 const getCategoryColor = (category?: string): string => {
   switch (category) {
     case 'ketakmiran':
-      return '#3b82f6'; // Blue
+      return '#8b5e3c';
     case 'pembinaan':
-      return '#10b981'; // Green
+      return '#a9744f';
     case 'aktualisasi':
-      return '#8b5cf6'; // Purple
+      return '#b9825b';
     case 'internal':
-      return '#f59e0b'; // Orange
+      return '#c08a5b';
+    case 'osram':
+      return '#997e67';
     default:
-      return '#6b7280'; // Gray
+      return '#765743';
   }
 };
 
