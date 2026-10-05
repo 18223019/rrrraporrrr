@@ -83,7 +83,7 @@ export const DashboardPage: React.FC = () => {
           }}
         >
           <div>
-            Bobot aktif ({active.length}/{breakdown.breakdown.length}):
+            Bobot aktif ({active.length}/{breakdown.breakdown.length}), total {breakdown.activeWeight}:
           </div>
           {active.length > 0 ? (
             <div
@@ -105,7 +105,8 @@ export const DashboardPage: React.FC = () => {
                     color: '#5f4030',
                   }}
                 >
-                  <span style={{ fontWeight: 500 }}>{item.column}</span>: {formatPercent(item.normalizedWeight)}
+                  <span style={{ fontWeight: 500 }}>{item.column}</span>:{' '}
+                  {bidangKey === 'osram' ? `${item.originalWeight}%` : formatPercent(item.normalizedWeight)}
                 </span>
               ))}
             </div>
@@ -240,7 +241,6 @@ export const DashboardPage: React.FC = () => {
                 fontWeight: 'bold',
                 color: 'var(--text-primary)',
                 margin: '0 0 0.5rem 0',
-                textShadow: '0 6px 20px rgba(112, 69, 45, 0.25)',
               }}
             >
               Rapor Asrama

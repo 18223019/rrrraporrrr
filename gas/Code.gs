@@ -162,7 +162,7 @@ function getScoreByName(month, name) {
     const allScores = getScores(sheetName);
     if (allScores.error) continue;
     record = allScores.data.find((r) => {
-      const recordName = r.Panggilan || r.Panaggilan || r.Username || r.username;
+      const recordName = r.Panggilan || r.Panaggilan || r.Username || r.username || r.Nama;
       return recordName && recordName.toString().trim().toLowerCase() === name.toString().trim().toLowerCase();
     });
     if (record) {
@@ -285,7 +285,13 @@ function getMembers() {
     const members = data.rows.map((row) => {
       const record = rowToRecord(row, data.headers);
 
-      const username = (record.username || record.Username || "")
+      const username = (
+        record.username ||
+        record.Username ||
+        record.Panggilan ||
+        record.panggilan ||
+        ""
+      )
         .toString()
         .trim();
       const name = (record.Nama || record.nama || record.Name || "")

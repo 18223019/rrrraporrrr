@@ -37,14 +37,6 @@ const bidangConfig = {
   },
 };
 
-const glowColorMap: Record<BidangType, string> = {
-  ketakmiran: 'rgba(59, 130, 246, 0.55)',
-  pembinaan: 'rgba(16, 185, 129, 0.55)',
-  aktualisasi: 'rgba(139, 92, 246, 0.55)',
-  internal: 'rgba(245, 158, 11, 0.55)',
-  osram: 'rgba(153, 126, 103, 0.55)',
-};
-
 export const BidangDetailPage: React.FC = () => {
   const { bidang } = useParams<{ slug: string; bidang: string }>();
   
@@ -59,7 +51,7 @@ export const BidangDetailPage: React.FC = () => {
   const config = bidangConfig[currentBidang];
   
   // Fetch real bidang stats from API with selected month
-  const { parameters, kumulatif, loading } = useBidangStats({
+  const { parameters, bonus, kumulatif, loading } = useBidangStats({
     username: profile?.username || '',
     bidang: currentBidang,
     month: selectedMonth,
@@ -101,12 +93,11 @@ export const BidangDetailPage: React.FC = () => {
               fontWeight: 'bold',
               color: 'var(--text-primary)',
               margin: '0 0 0.5rem 0',
-              textShadow: `0 8px 26px ${glowColorMap[config.color as BidangType] ?? 'rgba(139, 92, 246, 0.45)'}`,
             }}
           >
             {config.title}
           </h1>
-          <p style={{ color: '#6b7280', margin: 0 }}>
+          <p style={{ color: '#bfbc9c', margin: 0 }}>
             Detail nilai per program
           </p>
         </div>
@@ -168,12 +159,36 @@ export const BidangDetailPage: React.FC = () => {
           </div>
         </BentoCard>
 
+        {currentBidang === 'aktualisasi' && (
+          <BentoCard
+            size="medium"
+            title="Nilai Bonus Aktualisasi Diri"
+            category="aktualisasi"
+            loading={loading}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                minHeight: '180px',
+                fontSize: '3rem',
+                fontWeight: 700,
+                color: 'var(--aktualisasi)',
+              }}
+            >
+              {bonus.toFixed(1)}
+            </div>
+          </BentoCard>
+        )}
+
         {/* Parameter Cards - Individual Gauges */}
         {parameters.map((param) => {
           const rawValue = param.value ?? 0;
           const roundedRawValue = Math.round(rawValue * 10) / 10;
           const weightedContribution = param.isActive && param.value !== null
-            ? Math.round(((param.value * param.normalizedWeight) / 100) * 10) / 10
+            ? Math.round(((param.value * (currentBidang === 'osram' ? param.originalWeight : param.normalizedWeight)) / 100) * 10) / 10
             : 0;
 
           return (
@@ -195,18 +210,22 @@ export const BidangDetailPage: React.FC = () => {
                   <div>
                     Bobot dasar:{' '}
                       <span style={{ color: '#664930', fontWeight: 600 }}>
-                      {formatPercent(
-                        totalOriginalWeight > 0
-                          ? (param.originalWeight / totalOriginalWeight) * 100
-                          : 0,
-                      )}
+                      {currentBidang === 'osram'
+                        ? `${param.originalWeight}%`
+                        : formatPercent(
+                            totalOriginalWeight > 0
+                              ? (param.originalWeight / totalOriginalWeight) * 100
+                              : 0,
+                          )}
                     </span>
                   </div>
                   {param.isActive ? (
                     <div>
                       Bobot aktif:{' '}
                       <span style={{ color: `var(--${config.color})` }}>
-                        {formatPercent(param.normalizedWeight)}
+                        {currentBidang === 'osram'
+                          ? `${param.originalWeight}%`
+                          : formatPercent(param.normalizedWeight)}
                       </span>
                     </div>
                   ) : (

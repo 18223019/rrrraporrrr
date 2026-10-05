@@ -34,6 +34,7 @@ interface UseBidangStatsOptions {
 
 interface UseBidangStatsReturn {
   parameters: Parameter[];
+  bonus: number;
   kumulatif: number;
   loading: boolean;
   error: Error | null;
@@ -91,6 +92,7 @@ export const useBidangStats = ({
 }: UseBidangStatsOptions): UseBidangStatsReturn => {
   const apiRoute = useApiRoute();
   const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [bonus, setBonus] = useState(0);
   const [kumulatif, setKumulatif] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -98,6 +100,7 @@ export const useBidangStats = ({
   const fetchStats = async () => {
     if (!username || !bidang) {
       setParameters([]);
+      setBonus(0);
       setKumulatif(0);
       setLoading(false);
       return;
@@ -141,6 +144,7 @@ export const useBidangStats = ({
 
 
         setParameters(params);
+        setBonus(computation.bonus);
         const finalScore = Number(data['Final Score'] ?? data['Final score'] ?? data['FinalScore']);
         setKumulatif(
           bidang === 'osram' && Number.isFinite(finalScore)
@@ -150,7 +154,7 @@ export const useBidangStats = ({
 
       } else {
     // No data found - set defaults with 0 values
-    const config = getBidangParameterConfig(bidang, currentMonth);
+    const config = getBidangParameterConfig(bidang, currentMonth, getBidangGroup(username));
         const params: Parameter[] = config.map(({ column, weight }) => ({
           id: column.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           label: column,
@@ -161,6 +165,7 @@ export const useBidangStats = ({
         }));
         
         setParameters(params);
+        setBonus(0);
         setKumulatif(0);
         
         const totalTime = performance.now() - startTime;
@@ -171,7 +176,7 @@ export const useBidangStats = ({
       setError(err instanceof Error ? err : new Error('Failed to fetch bidang stats'));
       
     // Set default empty parameters on error
-    const config = getBidangParameterConfig(bidang, currentMonth);
+    const config = getBidangParameterConfig(bidang, currentMonth, getBidangGroup(username));
       const params: Parameter[] = config.map(({ column, weight }) => ({
         id: column.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         label: column,
@@ -182,6 +187,7 @@ export const useBidangStats = ({
       }));
       
       setParameters(params);
+      setBonus(0);
       setKumulatif(0);
       
       const totalTime = performance.now() - startTime;
@@ -197,6 +203,7 @@ export const useBidangStats = ({
 
   return {
     parameters,
+    bonus,
     kumulatif,
     loading,
     error,

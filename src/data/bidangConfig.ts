@@ -18,6 +18,7 @@ export interface BidangParameterBreakdown {
 
 export interface BidangScoreComputation {
   score: number;
+  bonus: number;
   totalWeight: number;
   activeWeight: number;
   breakdown: BidangParameterBreakdown[];
@@ -43,8 +44,17 @@ export const getBidangGroup = (username: unknown): BidangGroup | undefined => {
 };
 
 export const getBidangColumnAliases = (column: string): string[] => {
+  if (column === 'Kehadiran Osram') return ['Kehadiran'];
+  if (column === 'Kehadiran Kumsub') return ['Kumsub', 'Kumsub Agustus', 'Penugasan'];
+  if (column === 'Post Test') return ['Post Test', 'Rata-rata Post Test'];
+  if (column === 'Rata-rata Post Test') return ['Rata-Rata', 'Post Test', 'Rata-rata Post-Test', 'Rata-rata Posttest'];
   if (column === 'Inspirasi Subuh') return ['Insipirasi Subuh'];
   if (column === 'SSD ketakmiran') return ['SSD Ketakmiran'];
+  if (column === 'Feedback (AHA)') return ['Feedback AHA', 'Feedback'];
+  if (column === '50 Mimpi') return ['50 Mimpi', 'Penugasan', 'Penugasan 50 Mimpi'];
+  if (column === 'Wawancara Karyawan') return ['Wawancara Karyawan', 'Wawancara'];
+  if (column === 'Ketakmiran') return ['Ketakmiran Astra', 'Ketakmiran Astri'];
+  if (column === 'Challenge Kamar') return ['Penugasan'];
   return [];
 };
 
@@ -93,7 +103,6 @@ const LEGACY_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
     { column: 'Takmir Event', weight: 10 },
     { column: 'Insipirasi Subuh', weight: 15 },
     { column: 'SSD Ketakmiran', weight: 10 },
-    { column: 'Challenge Takmir', weight: 5 },
   ],
   pembinaan: [
     { column: 'Tahfidz', weight: 20 },
@@ -187,22 +196,26 @@ const SEPTEMBER26_ASTRI_KETAKMIRAN_CONFIG: ReadonlyArray<BidangParameterConfig> 
 ];
 
 const AGUSTUS26_OSRAM_CONFIG: ReadonlyArray<BidangParameterConfig> = [
-  { column: 'Kegiatan Osram', weight: 18 },
-  { column: 'Kumsub Agustus', weight: 18 },
+  { column: 'Kehadiran Osram', weight: 18 },
+  { column: 'Kehadiran Kumsub', weight: 18 },
   { column: 'Challenge Kamar', weight: 13 },
   { column: 'Wawancara Karyawan', weight: 8 },
   { column: '50 Mimpi', weight: 8 },
   { column: 'Resume', weight: 7 },
   { column: 'Feedback (AHA)', weight: 5 },
-  { column: 'Fiqh Interaksi', weight: 2.875 },
-  { column: 'ALIP', weight: 2.875 },
-  { column: 'Pemulsaran Jenazah', weight: 2.875 },
-  { column: 'Utilitas Air', weight: 2.875 },
-  { column: 'Utilitas Listrik', weight: 2.875 },
-  { column: 'Temu Bidang I', weight: 2.875 },
-  { column: 'Temu Bidang II', weight: 2.875 },
-  { column: 'Temu Bidang III', weight: 2.875 },
-  { column: 'Takmir Harian', weight: 12 },
+  { column: 'Post Test', weight: 23 },
+  { column: 'Ketakmiran', weight: 12 },
+];
+
+const AGUSTUS26_ASTRI_OSRAM_CONFIG: ReadonlyArray<BidangParameterConfig> = [
+  { column: 'Kehadiran Osram', weight: 20 },
+  { column: 'Kehadiran Kumsub', weight: 20 },
+  { column: 'Challenge Kamar', weight: 15 },
+  { column: 'Wawancara Karyawan', weight: 10 },
+  { column: '50 Mimpi', weight: 10 },
+  { column: 'Resume', weight: 7 },
+  { column: 'Feedback (AHA)', weight: 5 },
+  { column: 'Post Test', weight: 25 },
 ];
 
 const MONTH_NAME_INDEX: Record<string, number> = {
@@ -254,6 +267,10 @@ export const getBidangParameterConfig = (
   month?: string,
   group?: BidangGroup,
 ): ReadonlyArray<BidangParameterConfig> => {
+  if (bidang === 'osram' && month === 'Agustus26' && group === 'astri') {
+    return AGUSTUS26_ASTRI_OSRAM_CONFIG;
+  }
+
   if (bidang === 'osram' && month === 'Agustus26') {
     return AGUSTUS26_OSRAM_CONFIG;
   }
@@ -326,18 +343,33 @@ const computeBidangScoreInternal = (
     });
   }
 
-  const score = activeWeight === 0 ? 0 : weightedSum / activeWeight;
+  const score = activeWeight === 0
+    ? 0
+    : bidang === 'osram'
+      ? weightedSum / 100
+      : bidang === 'ketakmiran' && month === 'September26'
+        ? weightedSum / 100
+      : weightedSum / activeWeight;
+  const bonusValue = bidang === 'aktualisasi'
+    ? normalizeValue(getter('Nilai bonus aktualisasi diri'))
+    : null;
+  const bonus = bonusValue ?? (
+    bidang === 'ketakmiran' && month === 'September26' ? 10 : 0
+  );
 
   const normalizedBreakdown = breakdown.map((entry) => ({
     ...entry,
     normalizedWeight:
       entry.isActive && activeWeight > 0
-        ? (entry.originalWeight / activeWeight) * 100
+        ? bidang === 'osram' || (bidang === 'ketakmiran' && month === 'September26')
+          ? entry.originalWeight
+          : (entry.originalWeight / activeWeight) * 100
         : 0,
   }));
 
   return {
-    score,
+    score: score + bonus,
+    bonus,
     totalWeight,
     activeWeight,
     breakdown: normalizedBreakdown,

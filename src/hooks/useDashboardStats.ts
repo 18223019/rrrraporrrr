@@ -10,6 +10,7 @@ import {
   calculateStats,
   calculateBidangBreakdown,
 } from '../utils/dashboardStats';
+import { getBidangGroup } from '../data/bidangConfig';
 import { dashboardCache } from '../utils/dashboardCache';
 
 
@@ -121,7 +122,12 @@ export const useDashboardStats = ({
         const historyData = historyResult.data;
 
         const calcStartTime = performance.now();
-  const calculatedStats = calculateStats(currentResponse.data, month, historyData);
+        const calculatedStats = calculateStats(
+          currentResponse.data,
+          month,
+          historyData,
+          getBidangGroup(username),
+        );
         const calcEndTime = performance.now();
         console.log(`Stats calculation took ${(calcEndTime - calcStartTime).toFixed(2)}ms`);
         ;

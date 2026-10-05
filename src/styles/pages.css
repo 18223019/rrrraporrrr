@@ -45,7 +45,7 @@
     border-radius: 0;
     box-shadow: none;
     page-break-after: always;
-    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%), white !important;
+    background: linear-gradient(135deg, rgba(255, 219, 187, 0.35) 0%, rgba(153, 126, 103, 0.2) 100%), #fffaf3 !important;
   }
   
   /* Ensure bento cards are visible in print */
@@ -67,12 +67,12 @@
   border-radius: 24px;
   overflow: hidden;
   background:
-    radial-gradient(40% 55% at 15% 20%, rgba(34, 211, 238, 0.32), transparent 70%),
-    radial-gradient(35% 45% at 80% 75%, rgba(59, 130, 246, 0.28), transparent 65%),
-    radial-gradient(30% 40% at 70% 15%, rgba(125, 211, 252, 0.24), transparent 60%),
-    linear-gradient(135deg, rgba(3, 7, 18, 0.95) 0%, rgba(4, 12, 24, 0.92) 35%, rgba(2, 44, 34, 0.88) 100%) !important;
+    radial-gradient(40% 55% at 15% 20%, rgba(255, 219, 187, 0.42), transparent 70%),
+    radial-gradient(35% 45% at 80% 75%, rgba(185, 130, 91, 0.24), transparent 65%),
+    radial-gradient(30% 40% at 70% 15%, rgba(204, 190, 177, 0.3), transparent 60%),
+    linear-gradient(135deg, #664930 0%, #997e67 48%, #b9825b 100%) !important;
   box-shadow:
-    0 40px 90px rgba(8, 47, 73, 0.45),
+    0 40px 90px rgba(102, 73, 48, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
@@ -81,8 +81,8 @@
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(55% 70% at 20% 15%, rgba(59, 130, 246, 0.22), transparent 70%),
-    radial-gradient(60% 75% at 85% 85%, rgba(16, 185, 129, 0.18), transparent 75%);
+    radial-gradient(55% 70% at 20% 15%, rgba(255, 219, 187, 0.22), transparent 70%),
+    radial-gradient(60% 75% at 85% 85%, rgba(185, 130, 91, 0.18), transparent 75%);
   filter: blur(60px);
   opacity: 0.8;
   z-index: 0;
@@ -94,10 +94,10 @@
 }
 
 .pdf-capture-mode .bento-card {
-  background: linear-gradient(160deg, rgba(14, 30, 52, 0.78), rgba(12, 83, 135, 0.52)) !important;
-  border: 1px solid rgba(226, 232, 240, 0.22) !important;
+  background: linear-gradient(160deg, rgba(255, 250, 243, 0.96), rgba(255, 219, 187, 0.82)) !important;
+  border: 1px solid rgba(102, 73, 48, 0.22) !important;
   box-shadow:
-    0 24px 48px rgba(8, 47, 73, 0.38),
+    0 24px 48px rgba(102, 73, 48, 0.24),
     inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(18px) saturate(130%) !important;
   -webkit-backdrop-filter: blur(18px) saturate(130%) !important;

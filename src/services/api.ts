@@ -365,7 +365,10 @@ async function fetchApi<T>(request: RequestConfig, cacheKey?: string): Promise<T
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const raw = await response.json();
+    const rawResponse = await response.json();
+    const raw = typeof rawResponse === 'string'
+      ? JSON.parse(rawResponse)
+      : rawResponse;
 
     if (raw && typeof raw === 'object' && 'error' in raw && (raw as any).error) {
       throw new Error((raw as any).message || (raw as any).error);
@@ -477,7 +480,43 @@ export async function getScoreByName(
 ): Promise<ScoreByNameResponse> {
   const request = createRequest('/scores', { month, name });
   const cacheKey = `score:${month}:${name}`;
-  return fetchApi<ScoreByNameResponse>(request, cacheKey);
+  try {
+    return await fetchApi<ScoreByNameResponse>(request, cacheKey);
+  } catch (error) {
+    if (month !== 'Agustus26') {
+      throw error;
+    }
+
+    const normalizedName = name.trim().toLowerCase();
+    const [astraResponse, astriResponse, membersResponse] = await Promise.all([
+      getScores('Agustus26_Astra'),
+      getScores('Agustus26_Astri'),
+      getMembers(),
+    ]);
+    const member = membersResponse.data.find((item) =>
+      item.username.trim().toLowerCase() === normalizedName,
+    );
+    const candidateRows = [...astraResponse.data, ...astriResponse.data];
+    const record = candidateRows.find((item) => {
+      const identity = String(item.Panggilan ?? item.Username ?? item.username ?? item.Nama ?? '')
+        .trim()
+        .toLowerCase();
+      return identity === normalizedName || (member?.name ?? '').trim().toLowerCase() === identity;
+    });
+
+    if (!record) {
+      throw error;
+    }
+
+    return {
+      success: true,
+      month,
+      name,
+      data: record,
+      timestamp: new Date().toISOString(),
+      cache: 0,
+    };
+  }
 }
 
 /**

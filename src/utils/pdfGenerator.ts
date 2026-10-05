@@ -133,7 +133,7 @@ async function addCoverPage(pdf: jsPDF, data: RaporData) {
   const { member, month, scores } = data;
   
   // Background gradient (simulated)
-  pdf.setFillColor(102, 126, 234); // #667eea
+  pdf.setFillColor(164, 132, 99); // rapor brown
   pdf.rect(0, 0, A4_WIDTH, A4_HEIGHT, 'F');
   
   // Add overlay pattern (circles for decoration)
@@ -190,7 +190,7 @@ async function addCoverPage(pdf: jsPDF, data: RaporData) {
   pdf.setFont('helvetica', 'bold');
   pdf.text('Total Skor:', MARGIN * 2.5, boxY + 65);
   pdf.setFontSize(24);
-  pdf.setTextColor(102, 126, 234);
+  pdf.setTextColor(95, 64, 48);
   pdf.text(scores.total.toString(), MARGIN * 2.5, boxY + 78);
   
   // Footer
@@ -217,7 +217,7 @@ async function addKPIPage(pdf: jsPDF, data: RaporData) {
   
   // KPI Cards
   const kpis: Array<{ label: string; value: number | string; color: [number, number, number] }> = [
-    { label: 'Total Skor', value: scores.total, color: [102, 126, 234] },
+    { label: 'Total Skor', value: scores.total, color: [95, 64, 48] },
     { label: 'Kehadiran', value: `${scores.kehadiran}%`, color: [16, 185, 129] },
     { label: 'Tahfidz', value: scores.tahfidz, color: [249, 115, 22] },
     { label: 'Kebersihan', value: scores.kebersihan, color: [139, 92, 246] },
@@ -447,7 +447,7 @@ function addPageHeader(pdf: jsPDF, title: string) {
   pdf.text(title, MARGIN, 30);
   
   // Underline
-  pdf.setDrawColor(102, 126, 234);
+  pdf.setDrawColor(164, 132, 99);
   pdf.setLineWidth(2);
   pdf.line(MARGIN, 35, MARGIN + 60, 35);
 }

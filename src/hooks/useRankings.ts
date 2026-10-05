@@ -21,6 +21,10 @@ const AKHWAT_USERNAMES = [
   'Dea', 'Adila', 'Anisa', 'Malikah', 'Haya', 'Auni', 'Nana', 'Rafa', 'Salwa', 'Sofi'
 ];
 
+const RANKING_USERNAME_ALIASES: Record<string, string> = {
+  dheaa: 'dea',
+};
+
 export interface RankingMember {
   rank: number;
   name: string;
@@ -44,7 +48,7 @@ const getAugustSheetName = (month: string, group: 'astra' | 'astri') =>
   month === 'Agustus26' ? `${month}_${group === 'astra' ? 'Astra' : 'Astri'}` : month;
 
 const getAugustFinalScore = (score: ScoreRecord): number | null => {
-  const value = score['Final Score'] ?? score['Final score'] ?? score['FinalScore'];
+  const value = score['Total'] ?? score['Final Score'] ?? score['Final score'] ?? score['FinalScore'];
   const numeric = typeof value === 'number' ? value : Number(value);
   return Number.isFinite(numeric) ? numeric : null;
 };
@@ -89,8 +93,10 @@ export const useRankings = (month: string) => {
 
         // Create map untuk lookup member details
         const memberMap = new Map<string, Member>();
+        const memberNameMap = new Map<string, Member>();
         members.forEach(member => {
-          memberMap.set(member.username, member);
+          memberMap.set(member.username.toLowerCase(), member);
+          memberNameMap.set(member.name.trim().toLowerCase(), member);
         });
 
         // Process scores dan split by gender
@@ -116,8 +122,16 @@ export const useRankings = (month: string) => {
         }> = [];
 
         scores.forEach(({ score, group: sourceGroup }) => {
-          const username = score.Panggilan;
-          const member = memberMap.get(username);
+          const scoreIdentity = score.Panggilan || score.Username || score.username || score.Nama;
+          const normalizedIdentity = typeof scoreIdentity === 'string'
+            ? scoreIdentity.trim().toLowerCase()
+            : '';
+          const mappedIdentity = RANKING_USERNAME_ALIASES[normalizedIdentity] ?? normalizedIdentity;
+          const member = typeof scoreIdentity === 'string'
+            ? memberMap.get(mappedIdentity)
+              ?? memberNameMap.get(normalizedIdentity)
+            : undefined;
+          const username = member?.username ?? String(scoreIdentity ?? '').trim();
           const scoreGroup = sourceGroup ?? getBidangGroup(username);
           
           const readScoreValue = (column: string) => getBidangRecordValue(score, column);
@@ -158,9 +172,9 @@ export const useRankings = (month: string) => {
             rawScore: score,
           };
 
-          if (sourceGroup === 'astra' || IKHWAN_USERNAMES.includes(username)) {
+          if (IKHWAN_USERNAMES.some((candidate) => candidate.toLowerCase() === username.toLowerCase())) {
             astraScores.push(scoreData);
-          } else if (sourceGroup === 'astri' || AKHWAT_USERNAMES.includes(username)) {
+          } else if (AKHWAT_USERNAMES.some((candidate) => candidate.toLowerCase() === username.toLowerCase())) {
             astriScores.push(scoreData);
           }
         });

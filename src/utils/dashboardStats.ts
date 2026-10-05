@@ -2,6 +2,7 @@ import {
   computeBidangScore,
   getBidangRecordValue,
   getBidangGroup,
+  normalizeValue,
   type BidangScoreComputation,
   type BidangType,
 } from '../data/bidangConfig';
@@ -34,12 +35,40 @@ export function calculateBidangBreakdown(
     };
   }
 
+  const osramComputation = computeBidangScore(
+    'osram',
+    (column) => getDashboardValue(record, column, month),
+    month,
+    group,
+  );
+  const augustFinalScore = month === 'Agustus26'
+    ? Number(record['Final Score'] ?? record['Final score'] ?? record['FinalScore'] ?? record['Total'])
+    : NaN;
+  const augustOsramKetakmiran = normalizeValue(record['Ketakmiran Astra']);
+  const augustKetakmiranComputation: BidangScoreComputation = {
+    score: augustOsramKetakmiran ?? 0,
+    bonus: 0,
+    totalWeight: 12,
+    activeWeight: augustOsramKetakmiran === null ? 0 : 12,
+    breakdown: [{
+      column: 'Ketakmiran',
+      originalWeight: 12,
+      normalizedWeight: 12,
+      isActive: augustOsramKetakmiran !== null,
+      value: augustOsramKetakmiran,
+    }],
+  };
+
   return {
-    ketakmiran: computeBidangScore('ketakmiran', (column) => getDashboardValue(record, column, month), month, group),
+    ketakmiran: month === 'Agustus26' && group === 'astra'
+      ? augustKetakmiranComputation
+      : computeBidangScore('ketakmiran', (column) => getDashboardValue(record, column, month), month, group),
     pembinaan: computeBidangScore('pembinaan', (column) => getDashboardValue(record, column, month), month, group),
     aktualisasi: computeBidangScore('aktualisasi', (column) => getDashboardValue(record, column, month), month, group),
     internal: computeBidangScore('internal', (column) => getDashboardValue(record, column, month), month, group),
-    osram: computeBidangScore('osram', (column) => getDashboardValue(record, column, month), month, group),
+    osram: Number.isFinite(augustFinalScore)
+      ? { ...osramComputation, score: augustFinalScore }
+      : osramComputation,
   };
 }
 
@@ -57,6 +86,7 @@ export function calculateStats(
   currentData: DashboardRecord,
   currentMonth?: string,
   historyData?: Array<Record<string, unknown> & { month?: string }>,
+  group = getBidangGroup(currentData?.Panggilan),
 ): DashboardStatsResult {
   if (!currentData) {
     return {
@@ -71,10 +101,10 @@ export function calculateStats(
   }
 
   const latest = currentData;
-  const bidangBreakdown = calculateBidangBreakdown(latest, currentMonth);
+  const bidangBreakdown = calculateBidangBreakdown(latest, currentMonth, group);
 
   const finalScoreValue = currentMonth === 'Agustus26'
-    ? latest['Final Score'] ?? latest['Final score'] ?? latest['FinalScore']
+    ? latest['Total'] ?? latest['Final Score'] ?? latest['Final score'] ?? latest['FinalScore']
     : undefined;
   const finalScore = Number(finalScoreValue);
   const averageScore = Number.isFinite(finalScore)
