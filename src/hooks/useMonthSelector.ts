@@ -33,6 +33,7 @@ function generateAcademicYearMonths(): MonthOption[] {
   return [
     { value: 'Agustus26', label: 'Agustus 2026', available: false },
     { value: 'September26', label: 'September 2026', available: false },
+    { value: 'Oktober26', label: 'Oktober 2026', available: false },
   ];
 }
 
@@ -208,26 +209,26 @@ export const useMonthSelector = (username?: string): UseMonthSelectorReturn => {
         }
 
         if (response.success && response.data) {
-          const allowedMonths = new Set(['Agustus26', 'September26']);
+          const allowedMonths = new Set(MONTH_BLUEPRINT.map((month) => month.value));
           const isMalikah = username?.toLowerCase() === 'malikah';
           const hasCurrentPeriodData = response.data.some(
             (month) => allowedMonths.has(month.value),
           );
           const availableValuesFromApi = response.data
             .filter((month) => allowedMonths.has(month.value))
-            .filter((month) => month.available && (!isMalikah || month.value === 'September26'))
+            .filter((month) => month.available && (!isMalikah || month.value !== 'Agustus26'))
             .map((month) => month.value);
           const availableValues = hasCurrentPeriodData
             ? availableValuesFromApi
-            : (isMalikah ? ['September26'] : ['Agustus26', 'September26']);
+            : (isMalikah ? ['September26', 'Oktober26'] : ['Agustus26', 'September26', 'Oktober26']);
           const availabilityMap = new Map(
             MONTH_BLUEPRINT.map((month) => [
               month.value,
               hasCurrentPeriodData
                 ? allowedMonths.has(month.value) && Boolean(
                     response.data.find((item) => item.value === month.value)?.available,
-                  ) && (!isMalikah || month.value === 'September26')
-                : allowedMonths.has(month.value) && (!isMalikah || month.value === 'September26'),
+                  ) && (!isMalikah || month.value !== 'Agustus26')
+                : allowedMonths.has(month.value) && (!isMalikah || month.value !== 'Agustus26'),
             ]),
           );
 
