@@ -68,7 +68,7 @@ export const LeaderboardPage: React.FC = () => {
               <Trophy size={32} color="#d4a017" /> Leaderboard {group ? GROUP_LABEL[group] : ''}
             </h1>
             <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0' }}>
-              Top {TOP_N} santri {group ? GROUP_LABEL[group] : ''}
+              Top {TOP_N} {group ? GROUP_LABEL[group] : ''}
               {currentMonth ? <> periode <strong>{currentMonth.label}</strong></> : null}
             </p>
           </div>
@@ -166,7 +166,7 @@ export const LeaderboardPage: React.FC = () => {
 
         {!loading && !error && myEntry && myEntry.rank > TOP_N && (
           <p style={{ textAlign: 'center', color: '#765743', marginTop: '1.25rem', marginBottom: 0 }}>
-            Posisimu saat ini: <strong>#{myEntry.rank}</strong> dari {groupRankings.length} santri {group ? GROUP_LABEL[group] : ''}. Semangat! 💪
+            Posisimu saat ini: <strong>#{myEntry.rank}</strong> dari {groupRankings.length} {group ? GROUP_LABEL[group] : ''}. Semangat! 💪
           </p>
         )}
       </div>
