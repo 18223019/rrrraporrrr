@@ -25,9 +25,18 @@ type Env = AvatarEnv;
 const MAX_BYTES = 512 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
+const handlePost: PagesFunction<Env> = async ({ request, env }) => {
   if (!hasAvatarStorage(env)) {
-    return jsonResponse({ error: 'AvatarStorageNotConfigured' }, 500);
+    return jsonResponse({
+      error: 'AvatarStorageNotConfigured',
+      message: 'Binding AVATAR_KV belum terpasang di Cloudflare (Settings → Bindings).',
+    }, 500);
+  }
+  if (!env.FIREBASE_PROJECT_ID) {
+    return jsonResponse({
+      error: 'FirebaseProjectIdMissing',
+      message: 'Variabel FIREBASE_PROJECT_ID belum diisi di Cloudflare (Settings → Variables).',
+    }, 500);
   }
 
   const user = await verifyFirebaseRequest(request, env.FIREBASE_PROJECT_ID);
@@ -58,9 +67,18 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   return jsonResponse({ success: true, username: user.username, version: Number(version) });
 };
 
-export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
+const handleDelete: PagesFunction<Env> = async ({ request, env }) => {
   if (!hasAvatarStorage(env)) {
-    return jsonResponse({ error: 'AvatarStorageNotConfigured' }, 500);
+    return jsonResponse({
+      error: 'AvatarStorageNotConfigured',
+      message: 'Binding AVATAR_KV belum terpasang di Cloudflare (Settings → Bindings).',
+    }, 500);
+  }
+  if (!env.FIREBASE_PROJECT_ID) {
+    return jsonResponse({
+      error: 'FirebaseProjectIdMissing',
+      message: 'Variabel FIREBASE_PROJECT_ID belum diisi di Cloudflare (Settings → Variables).',
+    }, 500);
   }
 
   const user = await verifyFirebaseRequest(request, env.FIREBASE_PROJECT_ID);
@@ -71,6 +89,26 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
   await deleteAvatar(env, user.username);
   return jsonResponse({ success: true, username: user.username, version: Date.now() });
 };
+
+/** Bungkus handler supaya error tak terduga tetap dikirim sebagai JSON yang jelas. */
+const withErrorHandling = (handler: PagesFunction<Env>): PagesFunction<Env> => async (context) => {
+  try {
+    return await handler(context);
+  } catch (error) {
+    const raw = error instanceof Error ? error.message : String(error);
+    console.error('❌ /api/avatar error:', raw);
+    const quota = /limit|quota|exceeded|429/i.test(raw);
+    return jsonResponse({
+      error: quota ? 'StorageQuotaExceeded' : 'AvatarServerError',
+      message: quota
+        ? `Kuota penyimpanan Cloudflare hari ini habis, coba lagi besok. (${raw})`
+        : `Server error: ${raw}`,
+    }, 500);
+  }
+};
+
+export const onRequestPost = withErrorHandling(handlePost);
+export const onRequestDelete = withErrorHandling(handleDelete);
 
 function matchesMagicBytes(bytes: Uint8Array, contentType: string): boolean {
   if (contentType === 'image/jpeg') {
