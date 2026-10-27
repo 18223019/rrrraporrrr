@@ -1051,33 +1051,27 @@ function sendRaporEmail(member, score, month) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#1e293b;padding:24px 0;">
       <div class="wrapper">
         <div class="card">
-          <div class="hero">
-            <img src="https://cdn.salmanitb.site/headerEmail.png" alt="Header Rapor Asrama Salman ITB" width="640" height="160">
-          </div>
           <div class="content">
             <h1>Rapor Asrama ${monthLabel}</h1>
-            <p style="margin-bottom: 18px;">Assalamu'alaikum</p>
-            <p>Halo, <strong>${username}</strong>!</p>
-            <p>Apa kabar? Semoga kamu senantiasa dalam keadaan sehat dan berada dalam lindungan Allah SWT.</p>
+            <p>Halo, <strong>${username}</strong>! ( ◜ ‿ ◝ )</p>
+            <p>Apa kabarrr? Semoga kamu senantiasa sehat, bahagia, dan berada dalam lindungan Allah SWT, yaa.</p>
             <p>Alhamdulillah rapor asrama untuk bulan <strong>${monthLabel}</strong> sudah tersedia yaa!</p>
-            <p>Rapor ini berfungsi sebagai feedback dan evaluasi atas progres kamu selama satu bulan terakhir. Semoga hasilnya bisa menjadi motivasi untuk terus bertumbuh dan memperbaiki diri di bulan-bulan berikutnya.</p>
+            <p>Rapor ini menjadi salah satu bentuk feedback dan evaluasi atas perjalananmu selama satu bulan terakhir. Semoga hasilnya bisa menjadi bahan refleksi, penyemangat untuk terus bertumbuh, dan pengingat bahwa selalu ada ruang untuk menjadi lebih baik dari hari ke hari.</p>
             <p>Kamu bisa lihat rapor performa berasramamu melalui link berikut:</p>
             <p style="text-align: center;">
               <a class="cta" href="${loginUrl}" target="_blank" rel="noopener">Dashboard Rapor Asrama</a>
             </p>
-            <p>(Aktifin <strong>Mode Desktop</strong> ya, atau buka di laptop/PC)</p>
-            <p>Gunakan akun <strong>${username}</strong> untuk login:</p>
+            <p>Gunakan akunmu untuk login:</p>
             <div class="credentials">
               <div><strong>Username:</strong> ${useraccount}</div>
               <div><strong>Password:</strong> ${password}</div>
             </div>
-            <p style="color: #b91c1c; font-weight: 600;">⚠️ Harap menjaga kerahasiaan akun kamu ya! Jika kamu merasa mengalami kebocoran data, segera hubungi coach.</p>
-            <p>Terus semangat dalam meniti perjalanan di asrama! Semoga setiap langkahmu menjadi amal kebaikan dan hikmah yang berharga.</p>
-            <p>Dan satu lagi… <strong>SEMANGAT UTS NYAA!!!</strong></p>
-            <p style="margin-top: 24px;">Have a nice day ^^</p>
+            <p style="color: #b91c1c; font-weight: 600;">⚠️ Harap menjaga kerahasiaan akun dan password ini. Password bersifat pribadi dan tidak boleh dibagikan kepada siapa pun.</p>
+            <p>Apa pun hasil yang kamu dapatkan bulan ini, semoga bisa menjadi bekal untuk melangkah lebih baik di bulan berikutnya. Tetap semangat berproses, jangan lupa mengapresiasi setiap progres kecilmu, dan terus libatkan Allah dalam setiap langkahmu.</p>
+            <p>Semoga Allah mudahkan setiap urusanmu, berkahi proses bertumbuhmu, dan jadikan setiap usaha kecilmu bernilai kebaikan di sisi-Nya. Aamiin yaa Rabbal 'aalamiin. 🤲🏻</p>
+            <p style="margin-top: 24px;">Have a nice dayy &lt;3</p>
             <p style="margin-top: 24px;">Wassalamu’alaikum warahmatullahi wabarakatuh.</p>
-            <p style="margin-top: 24px;">Best Regards,<br><strong>Coach Asrama 26/27</strong></p>
-            
+            <p style="margin-top: 24px;">With love,<br><strong>Coach Asrama 26/27 ^^</strong></p>
           </div>
           <div class="footer">
             Email otomatis – mohon tidak membalas email ini.<br>
@@ -1089,16 +1083,13 @@ function sendRaporEmail(member, score, month) {
     </html>
   `;
 
-  const plainBody = `Assalamualaikum
+  const plainBody = `Halo, ${username}! ( ◜ ‿ ◝ )
 
-Halo, ${username}!
-
-Apa kabar? Semoga kamu senantiasa dalam keadaan sehat dan berada dalam lindungan Allah SWT.
+Apa kabarrr? Semoga kamu senantiasa sehat, bahagia, dan berada dalam lindungan Allah SWT, yaa.
 
 Alhamdulillah rapor asrama untuk bulan ${monthLabel} sudah tersedia yaa!
 
-Rapor ini berfungsi sebagai feedback dan evaluasi atas progres kamu selama satu bulan terakhir.
-Semoga hasilnya bisa menjadi motivasi untuk terus bertumbuh dan memperbaiki diri di bulan-bulan berikutnya.
+Rapor ini menjadi salah satu bentuk feedback dan evaluasi atas perjalananmu selama satu bulan terakhir. Semoga hasilnya bisa menjadi bahan refleksi, penyemangat untuk terus bertumbuh, dan pengingat bahwa selalu ada ruang untuk menjadi lebih baik dari hari ke hari.
 
 Kamu bisa lihat rapor performa berasramamu melalui link berikut:
 ${loginUrl}
@@ -1110,15 +1101,16 @@ Gunakan akunmu untuk login:
 ⚠️ Harap menjaga kerahasiaan akun dan password ini.
 Password bersifat pribadi dan tidak boleh dibagikan kepada siapa pun.
 
-Terus semangat dalam meniti perjalanan di asrama!
-Semoga setiap langkahmu menjadi amal kebaikan dan hikmah yang berharga.
-Dan satu lagi… SEMANGAT UTS NYAA!!!
-Have a nice day^^
+Apa pun hasil yang kamu dapatkan bulan ini, semoga bisa menjadi bekal untuk melangkah lebih baik di bulan berikutnya. Tetap semangat berproses, jangan lupa mengapresiasi setiap progres kecilmu, dan terus libatkan Allah dalam setiap langkahmu.
+
+Semoga Allah mudahkan setiap urusanmu, berkahi proses bertumbuhmu, dan jadikan setiap usaha kecilmu bernilai kebaikan di sisi-Nya. Aamiin yaa Rabbal 'aalamiin. 🤲🏻
+
+Have a nice dayy <3
 
 Wassalamu’alaikum warahmatullahi wabarakatuh.
 
-Best Regards,
-Coach Asrama 26/27
+With love,
+Coach Asrama 26/27 ^^
 
 --
 Email otomatis – mohon tidak membalas email ini.`;
