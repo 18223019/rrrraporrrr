@@ -22,6 +22,13 @@ const SPREADSHEET_ID = "119JaNmuiLaYtmk96ibcV1kiNTaWQoAtWgKlx1nSV6tI";
 const CACHE_DURATION = 300; // 5 minutes in seconds
 const SHEET_METADATA = "metadata";
 
+// Spreadsheet "Penilaian Kehadiran 26/27" (beda file dengan rapor).
+// Akun pemilik deployment Apps Script harus punya akses (minimal Viewer).
+const ATTENDANCE_SPREADSHEET_ID = "1_GcrKUtzTLJagALWzX9p0PNaQML3O4uF8owIckt_q2U";
+const ATTENDANCE_SHEET_TYPES = ["Kumsub", "Program"];
+// Sesuai Tabel 1. Matriks Penilaian Kehadiran
+const ATTENDANCE_POINTS = { H1: 5, H2: 4, H3: 3, S1: 3, I: 2, S2: 1, H4: 1, TK: 0 };
+
 const DEFAULT_REVALIDATE_ENDPOINT = ""; // Override via Script Properties key CLOUDFLARE_REVALIDATE_URL
 const DEFAULT_REVALIDATE_SECRET = ""; // Override via Script Properties key CLOUDFLARE_REVALIDATE_SECRET
 const DEFAULT_REVALIDATE_PREWARM = true;
@@ -61,6 +68,8 @@ function doGet(e) {
       result = getHistory(params.name, months);
     } else if (path === "members") {
       result = getMembers();
+    } else if (path === "attendance") {
+      result = getAttendance(params.month, params.name);
     } else if (path === "months") {
       result = listAvailableMonthsWithLabels();
     } else if (path === "send-monthly-rapor") {
@@ -439,6 +448,145 @@ function listAvailableMonthsWithLabels() {
       message: error.toString(),
     };
   }
+}
+
+// ========================================
+// KEHADIRAN (Kumsub & Program)
+// ========================================
+
+/**
+ * GET ?path=attendance&month=Oktober26&name=<Panggilan>
+ * Membaca sheet Kumsub_<Bulan> dan Program_<Bulan> dari spreadsheet kehadiran.
+ */
+function getAttendance(month, name) {
+  if (!month || !name) {
+    return { error: "Month and name parameters required" };
+  }
+
+  const cacheKey = `attendance_${month}_${slugify(name)}`;
+  const cached = getCachedData(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const monthName = String(month).trim().replace(/\d+$/, "");
+    const fullName = resolveFullName(name);
+    const ss = SpreadsheetApp.openById(ATTENDANCE_SPREADSHEET_ID);
+
+    const response = {
+      success: true,
+      month: month,
+      name: name,
+      fullName: fullName,
+      points: ATTENDANCE_POINTS,
+      timestamp: new Date().toISOString(),
+      cache: CACHE_DURATION,
+    };
+
+    ATTENDANCE_SHEET_TYPES.forEach((type) => {
+      const sheet = ss.getSheetByName(`${type}_${monthName}`);
+      response[type.toLowerCase()] = sheet
+        ? parseAttendanceSheet(sheet, fullName)
+        : { available: false, found: false, entries: [], summary: summarizeAttendance([]) };
+    });
+
+    setCachedData(cacheKey, response);
+    return response;
+  } catch (error) {
+    return {
+      error: "Failed to read attendance",
+      message: error.toString(),
+    };
+  }
+}
+
+function resolveFullName(name) {
+  const target = normalizeName(name);
+  const members = getMembers();
+  if (members && members.success) {
+    const member = members.data.find(
+      (m) => normalizeName(m.username) === target || normalizeName(m.panggilan) === target
+    );
+    if (member && member.name) return member.name;
+  }
+  return String(name);
+}
+
+function normalizeName(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function parseAttendanceSheet(sheet, fullName) {
+  const values = sheet.getDataRange().getDisplayValues();
+  const lower = (v) => String(v || "").trim().toLowerCase();
+
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(values.length, 30); i += 1) {
+    if (values[i].some((cell) => lower(cell) === "nama lengkap")) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) {
+    return { available: false, found: false, entries: [], summary: summarizeAttendance([]) };
+  }
+
+  const header = values[headerIdx];
+  const nameCol = header.findIndex((cell) => lower(cell) === "nama lengkap");
+  const lpIdx = header.findIndex((cell) => lower(cell) === "l/p");
+  const firstCol = lpIdx >= 0 ? lpIdx + 1 : nameCol + 4;
+
+  // Sheet Program punya baris nama kegiatan tepat di bawah header tanggal
+  const nextRow = values[headerIdx + 1] || [];
+  const hasLabelRow = !String(nextRow[nameCol] || "").trim() && !String(nextRow[0] || "").trim();
+  const labelRow = hasLabelRow ? nextRow : null;
+  const dataStart = headerIdx + (hasLabelRow ? 2 : 1);
+
+  const target = normalizeName(fullName);
+  const row = values.slice(dataStart).find((r) => normalizeName(r[nameCol]) === target);
+  if (!row) {
+    return { available: true, found: false, entries: [], summary: summarizeAttendance([]) };
+  }
+
+  const dateRegex = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/;
+  const entries = [];
+  let lastDate = "";
+  for (let c = firstCol; c < header.length; c += 1) {
+    const headerValue = String(header[c] || "").trim();
+    if (dateRegex.test(headerValue)) lastDate = headerValue;
+    const code = String(row[c] || "").trim().toUpperCase();
+    if (!Object.prototype.hasOwnProperty.call(ATTENDANCE_POINTS, code)) continue;
+    entries.push({
+      date: dateRegex.test(headerValue) ? headerValue : lastDate,
+      label: labelRow ? String(labelRow[c] || "").trim() : "",
+      code: code,
+      points: ATTENDANCE_POINTS[code],
+    });
+  }
+
+  return { available: true, found: true, entries: entries, summary: summarizeAttendance(entries) };
+}
+
+function summarizeAttendance(entries) {
+  const counts = {};
+  Object.keys(ATTENDANCE_POINTS).forEach((code) => (counts[code] = 0));
+  let total = 0;
+  entries.forEach((entry) => {
+    counts[entry.code] += 1;
+    total += entry.points;
+  });
+  const max = entries.length * 5;
+  return {
+    count: entries.length,
+    totalPoints: total,
+    maxPoints: max,
+    score: max > 0 ? Math.round((total / max) * 10000) / 100 : null,
+    counts: counts,
+  };
+}
+
+function testGetAttendance() {
+  const result = getAttendance("Oktober26", "Hamdani");
+  Logger.log(JSON.stringify(result, null, 2));
 }
 
 // ========================================

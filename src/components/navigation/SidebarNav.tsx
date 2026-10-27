@@ -17,6 +17,7 @@ import {
   X,
   LogOut,
   Trophy,
+  CalendarCheck,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { signOut } from '../../services/auth';
@@ -71,6 +72,13 @@ const getNavItems = (userSlug: string): NavItem[] => [
     path: `/${userSlug}/osram`,
     icon: <ClipboardList size={20} />,
     color: '#997e67',
+  },
+  {
+    id: 'kehadiran',
+    label: 'Kehadiran',
+    path: `/${userSlug}/kehadiran`,
+    icon: <CalendarCheck size={20} />,
+    color: '#8b5e3c',
   },
   {
     id: 'leaderboard',

@@ -64,7 +64,7 @@ class ApiCache {
 // Global cache instance
 const apiCache = new ApiCache();
 
-type FetchResource = 'scores' | 'history' | 'members' | 'months';
+type FetchResource = 'scores' | 'history' | 'members' | 'months' | 'attendance';
 
 // ========================================
 // API CONFIGURATION
@@ -101,6 +101,7 @@ const RESOURCE_MAP: Record<string, FetchResource> = {
   '/history': 'history',
   '/members': 'members',
   '/months': 'months',
+  '/attendance': 'attendance',
 };
 
 interface RequestConfig {
@@ -701,4 +702,53 @@ export function clearCache(): void {
  */
 export function getCacheStats(): { size: number; keys: string[] } {
   return apiCache.getStats();
+}
+
+// ========================================
+// KEHADIRAN (Kumsub & Program)
+// ========================================
+
+export type AttendanceCode = 'H1' | 'H2' | 'H3' | 'S1' | 'I' | 'S2' | 'H4' | 'TK';
+
+export interface AttendanceEntry {
+  date: string;   // "1/10/26"
+  label: string;  // nama kegiatan (Program), kosong untuk Kumsub
+  code: AttendanceCode;
+  points: number;
+}
+
+export interface AttendanceSummary {
+  count: number;
+  totalPoints: number;
+  maxPoints: number;
+  score: number | null; // persen, 2 desimal
+  counts: Record<AttendanceCode, number>;
+}
+
+export interface AttendanceSection {
+  available: boolean; // sheet bulan ini ada
+  found: boolean;     // nama santri ditemukan di sheet
+  entries: AttendanceEntry[];
+  summary: AttendanceSummary;
+}
+
+export interface AttendanceResponse {
+  success: boolean;
+  month: string;
+  name: string;
+  fullName: string;
+  points: Record<AttendanceCode, number>;
+  kumsub: AttendanceSection;
+  program: AttendanceSection;
+  timestamp: string;
+}
+
+/**
+ * Kehadiran Kumsub & Program satu santri untuk satu bulan.
+ * @param month - contoh "Oktober26"
+ * @param name - panggilan/username
+ */
+export async function getAttendance(month: string, name: string): Promise<AttendanceResponse> {
+  const request = createRequest('/attendance', { month, name });
+  return fetchApi<AttendanceResponse>(request, `attendance:${month}:${name.toLowerCase()}`);
 }

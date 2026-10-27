@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-type FetchResource = 'scores' | 'history' | 'members' | 'months';
+type FetchResource = 'scores' | 'history' | 'members' | 'months' | 'attendance';
 
 type SnapshotEnvelope<T> = {
   cachedAt: string;
@@ -21,7 +21,7 @@ const CANARY_COOKIE_NAME = 'rapor_canary';
 const CANARY_COOKIE_VALUE = 'v1';
 const METRICS_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
-const AllowedResourceSchema = z.enum(['scores', 'history', 'members', 'months']);
+const AllowedResourceSchema = z.enum(['scores', 'history', 'members', 'months', 'attendance']);
 const NumberLike = z
   .union([z.string(), z.number(), z.null(), z.undefined()])
   .transform((value) => coerceNumber(value));
@@ -113,6 +113,27 @@ const HistoryResponseSchema = z.object({
   timestamp: z.string().optional(),
 });
 
+const AttendanceSectionSchema = z.object({
+  available: z.boolean(),
+  found: z.boolean(),
+  entries: z.array(z.object({
+    date: z.string(),
+    label: z.string(),
+    code: z.string(),
+    points: z.number(),
+  })),
+  summary: z.object({}).passthrough(),
+});
+
+const AttendanceResponseSchema = z.object({
+  success: z.boolean().optional().default(true),
+  month: z.string(),
+  name: z.string(),
+  fullName: z.string().optional(),
+  kumsub: AttendanceSectionSchema,
+  program: AttendanceSectionSchema,
+}).passthrough();
+
 const CACHE_CONTROL_HEADER = 'public, s-maxage=60, stale-while-revalidate=300';
 const SNAPSHOT_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 const UPSTREAM_TIMEOUT_MS = 20000;
@@ -124,12 +145,12 @@ export const onRequest: PagesFunction<Env> = async (context) => {
 
     const resourceParam = url.searchParams.get('resource');
     if (!resourceParam) {
-      return badRequest('Missing "resource" query parameter. Expected one of scores|history|members|months.');
+      return badRequest('Missing "resource" query parameter. Expected one of scores|history|members|months|attendance.');
     }
 
     const parsedResource = AllowedResourceSchema.safeParse(resourceParam);
     if (!parsedResource.success) {
-      return badRequest('Invalid resource value. Expected one of scores|history|members|months.');
+      return badRequest('Invalid resource value. Expected one of scores|history|members|months|attendance.');
     }
 
     const resource = parsedResource.data;
@@ -301,6 +322,10 @@ function normalisePayload(resource: FetchResource, raw: unknown) {
         data,
       };
     }
+    case 'attendance': {
+      const parsed = AttendanceResponseSchema.parse(raw);
+      return parsed;
+    }
     default: {
       const exhaustive: never = resource;
       throw new Error(`Unhandled resource ${exhaustive}`);
@@ -380,6 +405,11 @@ function validateRequiredParams(resource: FetchResource, params: URLSearchParams
     case 'scores':
       if (!params.get('month')) {
         return 'Parameter "month" is required for resource=scores';
+      }
+      return null;
+    case 'attendance':
+      if (!params.get('month') || !params.get('name')) {
+        return 'Parameters "month" and "name" are required for resource=attendance';
       }
       return null;
     case 'history':
