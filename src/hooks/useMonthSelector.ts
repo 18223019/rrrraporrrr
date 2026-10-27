@@ -258,8 +258,14 @@ export const useMonthSelector = (username?: string): UseMonthSelectorReturn => {
             : false;
 
           const initialSource = initialMonthInfoRef.current?.source ?? 'default';
+          const latestAvailable = availableValues[availableValues.length - 1];
 
-          if (resolvedSelection && resolvedAvailable) {
+          // Pertama kali buka (belum pernah memilih bulan): langsung tampilkan bulan terbaru
+          if (initialSource === 'default' && !storedMonth && latestAvailable) {
+            if (latestAvailable !== selectedMonth) {
+              setSelectedMonth(latestAvailable, { persist: false });
+            }
+          } else if (resolvedSelection && resolvedAvailable) {
             if (resolvedSelection !== selectedMonth) {
               setSelectedMonth(resolvedSelection, { persist: false });
             }

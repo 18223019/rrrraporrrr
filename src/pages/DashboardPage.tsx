@@ -80,7 +80,7 @@ export const DashboardPage: React.FC = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: '0.35rem',
-            fontSize: '0.8rem',
+            fontSize: '0.85rem',
             color: '#765743',
           }}
         >
@@ -102,8 +102,8 @@ export const DashboardPage: React.FC = () => {
                     backgroundColor: 'rgba(148, 163, 184, 0.12)',
                     border: `1px solid ${chipColor}`,
                     borderRadius: '999px',
-                    padding: '0.15rem 0.6rem',
-                    fontSize: '0.75rem',
+                    padding: '0.2rem 0.65rem',
+                    fontSize: '0.8rem',
                     color: '#5f4030',
                   }}
                 >
@@ -118,7 +118,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           )}
           {inactive.length > 0 && (
-            <div style={{ fontSize: '0.75rem', color: '#5f4030' }}>
+            <div style={{ fontSize: '0.8rem', color: '#5f4030' }}>
               Tidak dinilai:{' '}
               {inactive.map((item) => item.column).join(', ')}
             </div>
@@ -252,7 +252,7 @@ export const DashboardPage: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="page-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {/* Month Selector */}
             <MonthSelector
               months={months}
@@ -433,6 +433,7 @@ export const DashboardPage: React.FC = () => {
 
           <BentoCard
             size="wide"
+            className="bento-card-full"
             title="Ranking"
             subtitle={currentMonth ? `Periode ${currentMonth.label}` : undefined}
             loading={rankingsLoading}
@@ -467,7 +468,7 @@ export const DashboardPage: React.FC = () => {
                     Ranking {rankingSummary.groupLabel}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-                    <span style={{ fontSize: '3rem', fontWeight: 700, color: '#ede9fe' }}>
+                    <span style={{ fontSize: '3rem', fontWeight: 700, color: '#42291d' }}>
                       {rankingSummary.groupRank}
                     </span>
                     <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
@@ -479,7 +480,7 @@ export const DashboardPage: React.FC = () => {
                       width: '100%',
                       height: '8px',
                       borderRadius: '999px',
-                      background: 'rgba(148, 163, 184, 0.25)',
+                      background: 'rgba(118, 87, 67, 0.15)',
                       overflow: 'hidden',
                     }}
                   >
@@ -488,7 +489,7 @@ export const DashboardPage: React.FC = () => {
                         width: `${groupBarWidth}%`,
                         height: '100%',
                         borderRadius: 'inherit',
-                        background: 'linear-gradient(90deg, rgba(129, 140, 248, 0.9), rgba(79, 70, 229, 0.9))',
+                        background: 'linear-gradient(90deg, #a9744f, #6b4a33)',
                         transition: 'width 0.3s ease',
                       }}
                     />
@@ -513,7 +514,7 @@ export const DashboardPage: React.FC = () => {
                     Ranking Asrama
                   </span>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-                    <span style={{ fontSize: '3rem', fontWeight: 700, color: '#ede9fe' }}>
+                    <span style={{ fontSize: '3rem', fontWeight: 700, color: '#42291d' }}>
                       {rankingSummary.overallRank ?? '—'}
                     </span>
                     <span style={{ fontSize: '1.1rem', color: 'var(--text-secondary)' }}>
@@ -525,7 +526,7 @@ export const DashboardPage: React.FC = () => {
                       width: '100%',
                       height: '8px',
                       borderRadius: '999px',
-                      background: 'rgba(148, 163, 184, 0.25)',
+                      background: 'rgba(118, 87, 67, 0.15)',
                       overflow: 'hidden',
                     }}
                   >
@@ -534,7 +535,7 @@ export const DashboardPage: React.FC = () => {
                         width: `${overallBarWidth}%`,
                         height: '100%',
                         borderRadius: 'inherit',
-                        background: 'linear-gradient(90deg, rgba(45, 212, 191, 0.9), rgba(14, 165, 233, 0.9))',
+                        background: 'linear-gradient(90deg, #98a677, #5f7547)',
                         transition: 'width 0.3s ease',
                       }}
                     />

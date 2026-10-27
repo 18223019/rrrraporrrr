@@ -97,7 +97,7 @@ export const BidangDetailPage: React.FC = () => {
           >
             {config.title}
           </h1>
-          <p style={{ color: '#bfbc9c', margin: 0 }}>
+          <p className="page-subtitle" style={{ margin: 0 }}>
             Detail nilai per program
           </p>
         </div>
@@ -126,16 +126,8 @@ export const BidangDetailPage: React.FC = () => {
               label={config.title}
               category={config.color as any}
               size="large"
-              showValue={false}
+              decimals={1}
             />
-            <div style={{ 
-              fontSize: '3rem', 
-              fontWeight: 'bold', 
-              color: `var(--${config.color})`,
-              marginTop: '1rem',
-            }}>
-              {kumulatif.toFixed(1)}
-            </div>
             <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#664930', textAlign: 'center' }}>
               Nilai akhir dari {activeParameters.length} / {parameters.length} parameter aktif
             </div>
@@ -199,17 +191,10 @@ export const BidangDetailPage: React.FC = () => {
               category={config.color as any}
               loading={loading}
               footer={(
-                <div
-                  style={{
-                    display: 'grid',
-                    gap: '0.25rem',
-                    fontSize: '0.8rem',
-                    color: '#664930',
-                  }}
-                >
-                  <div>
-                    Bobot dasar:{' '}
-                      <span style={{ color: '#664930', fontWeight: 600 }}>
+                <div className="weight-footer">
+                  <span className="weight-chip">
+                    Bobot dasar{' '}
+                    <strong>
                       {currentBidang === 'osram'
                         ? `${param.originalWeight}%`
                         : formatPercent(
@@ -217,30 +202,19 @@ export const BidangDetailPage: React.FC = () => {
                               ? (param.originalWeight / totalOriginalWeight) * 100
                               : 0,
                           )}
-                    </span>
-                  </div>
-                  {param.isActive ? (
-                    <div>
-                      Bobot aktif:{' '}
-                      <span style={{ color: `var(--${config.color})` }}>
-                        {currentBidang === 'osram'
+                    </strong>
+                  </span>
+                  <span className={`weight-chip ${param.isActive ? 'weight-chip-active' : ''}`}>
+                    Bobot aktif{' '}
+                    <strong>
+                      {!param.isActive
+                        ? '0%'
+                        : currentBidang === 'osram'
                           ? `${param.originalWeight}%`
                           : formatPercent(param.normalizedWeight)}
-                      </span>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'grid', gap: '0.15rem' }}>
-                      <div>
-                        Bobot aktif:{' '}
-                        <span style={{ color: '#664930', fontWeight: 600 }}>0%</span>
-                      </div>
-                      <div>
-                        <span style={{ color: '#664930', fontWeight: 600 }}>
-                          Bobot dialihkan ke parameter lain
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                    </strong>
+                  </span>
+                  {!param.isActive && <span className="weight-note">Bobot dialihkan ke parameter lain</span>}
                 </div>
               )}
             >
@@ -286,36 +260,10 @@ export const BidangDetailPage: React.FC = () => {
                     label={param.label}
                     category={config.color as any}
                     size="medium"
-                    showValue={false}
+                    decimals={Number.isInteger(roundedRawValue) ? 0 : 1}
                   />
-                  <div
-                    style={{
-                      textAlign: 'center',
-                      display: 'grid',
-                      gap: '0.35rem',
-                      marginTop: '0.5rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: '2rem',
-                        fontWeight: 'bold',
-                        color: `var(--${config.color})`,
-                      }}
-                    >
-                      {Number.isInteger(roundedRawValue) ? roundedRawValue : roundedRawValue.toFixed(1)}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: '1rem',
-                        color: 'var(--text-secondary)',
-                      }}
-                    >
-                      Kontribusi nilai:{' '}
-                      <span style={{ color: `var(--${config.color})`, fontWeight: 600 }}>
-                        {weightedContribution.toFixed(1)}
-                      </span>
-                    </div>
+                  <div className="param-contribution">
+                    Kontribusi nilai: <strong>{weightedContribution.toFixed(1)}</strong>
                   </div>
                 </>
               )}

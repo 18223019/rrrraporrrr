@@ -64,10 +64,10 @@ export const LeaderboardPage: React.FC = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: '#42291d', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Trophy size={32} color="#d4a017" /> Leaderboard {group ? GROUP_LABEL[group] : ''}
             </h1>
-            <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0' }}>
+            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1.05rem' }}>
               Top {TOP_N} {group ? GROUP_LABEL[group] : ''}
               {currentMonth ? <> periode <strong>{currentMonth.label}</strong></> : null}
             </p>

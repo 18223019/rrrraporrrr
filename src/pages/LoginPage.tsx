@@ -111,7 +111,9 @@ export const LoginPage = () => {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                fontSize: '0.9375rem',
+                fontSize: '1rem',
+                background: '#fffbf4',
+                color: '#42291d',
                 border: '1px solid #c9a98d',
                 borderRadius: '0.5rem',
                 outline: 'none',
@@ -134,7 +136,7 @@ export const LoginPage = () => {
               display: 'block',
               fontSize: '0.875rem',
               fontWeight: '600',
-              color: '#374151',
+              color: '#5f4030',
               marginBottom: '0.5rem',
             }}>
               Password
@@ -151,19 +153,21 @@ export const LoginPage = () => {
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
-                fontSize: '0.9375rem',
-                border: '1px solid #d1d5db',
+                fontSize: '1rem',
+                background: '#fffbf4',
+                color: '#42291d',
+                border: '1px solid #c9a98d',
                 borderRadius: '0.5rem',
                 outline: 'none',
                 transition: 'all 0.2s',
                 boxSizing: 'border-box',
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = '#667eea';
-                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                e.target.style.borderColor = '#9a6845';
+                e.target.style.boxShadow = '0 0 0 3px rgba(154, 104, 69, 0.16)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = '#d1d5db';
+                e.target.style.borderColor = '#c9a98d';
                 e.target.style.boxShadow = 'none';
               }}
             />
@@ -210,11 +214,12 @@ export const LoginPage = () => {
           textAlign: 'center',
         }}>
           <p style={{
-            fontSize: '0.75rem',
-            color: '#9ca3af',
+            fontSize: '0.85rem',
+            color: '#765743',
             margin: 0,
+            lineHeight: 1.5,
           }}>
-       
+            Lupa password? Hubungi coach asrama ya.
           </p>
         </div>
       </div>

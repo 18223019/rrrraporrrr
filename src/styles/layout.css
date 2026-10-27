@@ -42,7 +42,7 @@
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(8, 15, 31, 0.55);
+  background: rgba(66, 41, 29, 0.5);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   opacity: 0;
@@ -74,17 +74,17 @@
   height: 40px;
   border-radius: 12px;
   border: 1px solid var(--border-light);
-  background: rgba(17, 24, 39, 0.32);
+  background: rgba(255, 219, 187, 0.12);
   color: var(--text-primary);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 10px 24px rgba(8, 47, 73, 0.35);
+  box-shadow: 0 6px 16px rgba(66, 41, 29, 0.3);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .mobile-topbar__menu:hover {
   transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(8, 47, 73, 0.45);
+  box-shadow: 0 10px 20px rgba(66, 41, 29, 0.4);
 }
 
 @media (max-width: 900px) {
@@ -109,8 +109,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 0.9rem 1rem;
-    background: rgba(12, 18, 31, 0.88);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(94, 66, 44, 0.94);
+    border-bottom: 1px solid rgba(255, 219, 187, 0.15);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
   }

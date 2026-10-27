@@ -57,7 +57,23 @@ function doGet(e) {
 
     let result;
 
-    if (path === "scores" || params.month) {
+    // Path khusus dicek dulu, karena ketiganya juga memakai parameter month
+    // (sebelumnya semua permintaan ber-month tertangkap sebagai "scores").
+    if (path === "attendance") {
+      result = getAttendance(params.month, params.name);
+    } else if (path === "send-monthly-rapor") {
+      result = sendMonthlyRapor(params.month);
+    } else if (path === "revalidate-dashboard") {
+      const prewarm = normalizeBooleanParam(
+        params.prewarm,
+        DEFAULT_REVALIDATE_PREWARM
+      );
+      result = triggerRevalidateDashboard(params.month, params.slug || "", {
+        reason: params.reason || "manual-trigger",
+        prewarm: prewarm,
+        source: "api",
+      });
+    } else if (path === "scores" || params.month) {
       if (params.name) {
         result = getScoreByName(params.month, params.name);
       } else {
@@ -68,26 +84,8 @@ function doGet(e) {
       result = getHistory(params.name, months);
     } else if (path === "members") {
       result = getMembers();
-    } else if (path === "attendance") {
-      result = getAttendance(params.month, params.name);
     } else if (path === "months") {
       result = listAvailableMonthsWithLabels();
-    } else if (path === "send-monthly-rapor") {
-      const month = params.month;
-      result = sendMonthlyRapor(month);
-    } else if (path === "revalidate-dashboard") {
-      const month = params.month;
-      const slug = params.slug || "";
-      const reason = params.reason || "manual-trigger";
-      const prewarm = normalizeBooleanParam(
-        params.prewarm,
-        DEFAULT_REVALIDATE_PREWARM
-      );
-      result = triggerRevalidateDashboard(month, slug, {
-        reason: reason,
-        prewarm: prewarm,
-        source: "api",
-      });
     } else {
       result = { success: true, message: "Rapor Asrama API" };
     }
