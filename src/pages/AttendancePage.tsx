@@ -2,6 +2,7 @@
  * AttendancePage — kehadiran Kumsub (kumpul subuh) & Program asrama.
  * Hanya informasi: nilai kehadiran sudah termasuk di akumulasi rapor.
  * Memakai komponen yang sama dengan Dashboard (BentoGrid, BentoCard, GaugeChart).
+ * Gaya khusus ada di src/styles/attendance.css.
  */
 
 import React from 'react';
@@ -16,7 +17,7 @@ import type { AttendanceCode, AttendanceEntry, AttendanceSection } from '../serv
 import '../styles/attendance.css';
 
 // Palet tanah sesuai warna web (lihat src/styles/colors.css)
-// tone = kelas warna teks di src/styles/attendance.css
+// tone = kelas warna teks di attendance.css
 const CODE_STYLE: Record<AttendanceCode, { bg: string; tone: string }> = {
   H1: { bg: '#6f8555', tone: 'att-on-dark' },
   H2: { bg: '#98a677', tone: 'att-on-dark' },
@@ -27,7 +28,17 @@ const CODE_STYLE: Record<AttendanceCode, { bg: string; tone: string }> = {
   H4: { bg: '#b87845', tone: 'att-on-dark' },
   TK: { bg: '#9b4f3f', tone: 'att-on-dark' },
 };
-const EMPTY_STYLE = { bg: 'rgba(118, 87, 67, 0.1)', tone: 'att-muted' };
+const EMPTY_STYLE = { bg: 'rgba(118, 87, 67, 0.09)', tone: 'att-muted' };
+
+// Keterangan warna kalender (tanpa poin)
+const LEGEND: Array<{ color: string; text: string }> = [
+  { color: CODE_STYLE.H1.bg, text: 'H1 · Hadir' },
+  { color: CODE_STYLE.H2.bg, text: 'H2 · Hadir sebagian' },
+  { color: CODE_STYLE.H3.bg, text: 'H3/S1 · Telat atau sakit' },
+  { color: CODE_STYLE.I.bg, text: 'I · Izin' },
+  { color: CODE_STYLE.S2.bg, text: 'S2/H4 · Sakit ringan atau telat >15 menit' },
+  { color: CODE_STYLE.TK.bg, text: 'TK · Tanpa keterangan' },
+];
 
 const MONTH_INDEX: Record<string, number> = {
   januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
@@ -48,34 +59,41 @@ function parseDay(date: string): { day: number; month: number } | null {
   return match ? { day: Number(match[1]), month: Number(match[2]) - 1 } : null;
 }
 
-function formatDate(date: string): string {
-  const parsed = parseDay(date);
-  return parsed ? `${parsed.day} ${SHORT_MONTH[parsed.month] ?? ''}` : date || '-';
-}
+// "Kumon#9" → "Kumon #9" supaya penulisan seragam
+const tidyLabel = (label: string) => (label ? label.replace(/\s*#\s*/g, ' #').trim() : 'Kegiatan');
+
+const formatPercent = (value: number) =>
+  value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
 
 const attendedCount = (section?: AttendanceSection) =>
   section ? section.summary.count - (section.summary.counts.TK ?? 0) : 0;
 
 const EmptyText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div style={{ color: 'var(--text-secondary)', textAlign: 'center', width: '100%' }}>{children}</div>
+  <div className="att-empty">{children}</div>
 );
 
-const StatusBadge: React.FC<{ code: AttendanceCode }> = ({ code }) => {
-  const style = CODE_STYLE[code];
+const ScoreGauge: React.FC<{
+  section?: AttendanceSection;
+  category: 'ketakmiran' | 'pembinaan';
+  unit: string;
+  error: boolean;
+}> = ({ section, category, unit, error }) => {
+  if (!section?.found || section.summary.score === null) {
+    return <EmptyText>{error ? 'Gagal memuat data.' : 'Belum ada data bulan ini.'}</EmptyText>;
+  }
   return (
-    <span
-      className={style.tone}
-      style={{
-        background: style.bg,
-        borderRadius: 999,
-        padding: '0.15rem 0.7rem',
-        fontSize: '0.8rem',
-        fontWeight: 600,
-        letterSpacing: '0.03em',
-      }}
-    >
-      {code}
-    </span>
+    <div className="att-score">
+      <div className="att-gauge">
+        <GaugeChart value={section.summary.score} category={category} size="large" showValue={false} animated />
+        <div className="att-gauge-value">
+          {formatPercent(section.summary.score)}
+          <small>%</small>
+        </div>
+      </div>
+      <div className="att-pill">
+        Hadir <strong>{attendedCount(section)}</strong> dari {section.summary.count} {unit}
+      </div>
+    </div>
   );
 };
 
@@ -91,17 +109,20 @@ const KumsubCalendar: React.FC<{ monthKey: string; entries: AttendanceEntry[] }>
 
   const daysInMonth = new Date(parsedMonth.year, parsedMonth.month + 1, 0).getDate();
   const offset = (new Date(parsedMonth.year, parsedMonth.month, 1).getDay() + 6) % 7; // Senin = 0
+  const now = new Date();
+  const today =
+    now.getFullYear() === parsedMonth.year && now.getMonth() === parsedMonth.month ? now.getDate() : null;
 
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.4rem', marginBottom: '0.4rem' }}>
+    <div className="att-calendar">
+      <div className="att-weekdays">
         {WEEKDAYS.map((day) => (
-          <div key={day} className="label" style={{ textAlign: 'center', color: '#997e67', fontSize: '0.7rem' }}>
+          <div key={day} className="att-weekday">
             {day}
           </div>
         ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.4rem' }}>
+      <div className="att-days">
         {Array.from({ length: offset }).map((_, i) => (
           <div key={`empty-${i}`} />
         ))}
@@ -109,31 +130,52 @@ const KumsubCalendar: React.FC<{ monthKey: string; entries: AttendanceEntry[] }>
           const day = i + 1;
           const entry = byDay.get(day);
           const style = entry ? CODE_STYLE[entry.code] : EMPTY_STYLE;
+          const dateLabel = `${day} ${SHORT_MONTH[parsedMonth.month]}`;
           return (
             <div
               key={day}
-              className={style.tone}
-              title={entry ? `${day} ${SHORT_MONTH[parsedMonth.month]}: ${entry.code}` : `${day} ${SHORT_MONTH[parsedMonth.month]}`}
-              style={{
-                height: '2.9rem',
-                borderRadius: 12,
-                background: style.bg,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                lineHeight: 1.15,
-              }}
+              className={`att-day ${day === today ? 'att-day-today' : ''}`}
+              title={entry ? `${dateLabel}: ${entry.code}` : dateLabel}
+              style={{ background: style.bg }}
             >
-              <span className={style.tone} style={{ fontSize: '0.9rem', fontWeight: 600 }}>{day}</span>
-              {entry && <span className={style.tone} style={{ fontSize: '0.65rem', opacity: 0.9 }}>{entry.code}</span>}
+              <span className={`att-day-num ${style.tone}`}>{day}</span>
+              {entry && <span className={`att-day-code ${style.tone}`}>{entry.code}</span>}
             </div>
           );
         })}
       </div>
+      <div className="att-legend">
+        {LEGEND.map((item) => (
+          <span key={item.text} className="att-legend-item">
+            <span className="att-legend-dot" style={{ background: item.color }} />
+            {item.text}
+          </span>
+        ))}
+      </div>
     </div>
   );
 };
+
+const ProgramList: React.FC<{ entries: AttendanceEntry[] }> = ({ entries }) => (
+  <div className="att-list">
+    {entries.map((entry, index) => {
+      const parsed = parseDay(entry.date);
+      const style = CODE_STYLE[entry.code];
+      return (
+        <div key={`${entry.date}-${index}`} className="att-row">
+          <div className="att-date">
+            <span className="att-date-day">{parsed ? parsed.day : '-'}</span>
+            <span className="att-date-month">{parsed ? SHORT_MONTH[parsed.month] : ''}</span>
+          </div>
+          <span className="att-activity">{tidyLabel(entry.label)}</span>
+          <span className={`att-badge ${style.tone}`} style={{ background: style.bg }}>
+            {entry.code}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+);
 
 export const AttendancePage: React.FC = () => {
   const { profile, loading: profileLoading } = useUserProfile();
@@ -147,6 +189,7 @@ export const AttendancePage: React.FC = () => {
   const program = data?.program;
   const tkKumsub = kumsub?.summary.counts.TK ?? 0;
   const tkProgram = program?.summary.counts.TK ?? 0;
+  const tkTotal = tkKumsub + tkProgram;
   const hasData = Boolean(kumsub?.found || program?.found);
 
   return (
@@ -163,12 +206,14 @@ export const AttendancePage: React.FC = () => {
             <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
               Kehadiran
             </h1>
-            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Rekap kehadiran Kumsub dan program asrama</p>
+            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '1.05rem' }}>
+              Rekap kehadiran Kumsub dan program asrama
+            </p>
           </div>
           <MonthSelector months={months} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} loading={monthsLoading} />
         </div>
         {currentMonth && (
-          <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+          <p style={{ marginTop: '0.75rem', fontSize: '0.95rem', color: 'var(--text-secondary)' }}>
             Berikut catatan kehadiranmu untuk periode <strong>{currentMonth.label}</strong> ya! ^^
           </p>
         )}
@@ -177,42 +222,29 @@ export const AttendancePage: React.FC = () => {
       <div className="page-16-9 dashboard-content">
         <BentoGrid>
           <BentoCard size="medium" title="Kumsub" subtitle="Kumpul subuh" category="ketakmiran" loading={busy}>
-            {kumsub?.found && kumsub.summary.score !== null ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <GaugeChart value={kumsub.summary.score} label="Kumsub" category="ketakmiran" size="large" showValue animated />
-                <p style={{ margin: '0.5rem 0 0', color: '#765743', fontSize: '0.9rem' }}>
-                  Hadir {attendedCount(kumsub)} dari {kumsub.summary.count} hari
-                </p>
-              </div>
-            ) : (
-              <EmptyText>{error ? 'Gagal memuat data.' : 'Belum ada data bulan ini.'}</EmptyText>
-            )}
+            <ScoreGauge section={kumsub} category="ketakmiran" unit="hari" error={Boolean(error)} />
           </BentoCard>
 
-          <BentoCard size="medium" title="Program asrama" subtitle="Kajian & pembinaan" category="pembinaan" loading={busy}>
-            {program?.found && program.summary.score !== null ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                <GaugeChart value={program.summary.score} label="Program" category="pembinaan" size="large" showValue animated />
-                <p style={{ margin: '0.5rem 0 0', color: '#765743', fontSize: '0.9rem' }}>
-                  Hadir {attendedCount(program)} dari {program.summary.count} kegiatan
-                </p>
-              </div>
-            ) : (
-              <EmptyText>{error ? 'Gagal memuat data.' : 'Belum ada data bulan ini.'}</EmptyText>
-            )}
+          <BentoCard size="medium" title="Program asrama" subtitle="Kajian dan pembinaan" category="pembinaan" loading={busy}>
+            <ScoreGauge section={program} category="pembinaan" unit="kegiatan" error={Boolean(error)} />
           </BentoCard>
 
           <BentoCard size="medium" title="Tanpa keterangan" subtitle="Jumlah TK bulan ini" category="internal" loading={busy}>
             {hasData ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: '0.5rem' }}>
-                <div className={`stat-number ${tkKumsub + tkProgram > 0 ? 'att-danger' : 'att-good'}`} style={{ fontSize: '3.25rem' }}>
-                  {tkKumsub + tkProgram}
+              <div className="att-tk">
+                <div className={`att-tk-number ${tkTotal > 0 ? 'att-danger' : 'att-good'}`}>{tkTotal}x</div>
+                <div className="att-tk-split">
+                  <div>
+                    <span className="att-tk-split-value">{tkKumsub}</span>
+                    <span className="att-caption">Kumsub</span>
+                  </div>
+                  <div>
+                    <span className="att-tk-split-value">{tkProgram}</span>
+                    <span className="att-caption">Program</span>
+                  </div>
                 </div>
-                <p style={{ margin: 0, color: '#765743', fontSize: '0.9rem', textAlign: 'center' }}>
-                  {tkKumsub} di Kumsub · {tkProgram} di Program
-                </p>
-                <p style={{ margin: '0.25rem 0 0', color: '#997e67', fontSize: '0.8rem', textAlign: 'center' }}>
-                  {tkKumsub + tkProgram === 0 ? 'MasyaAllah, pertahankan yaa!' : 'Kalau berhalangan, jangan lupa izin ke coach ya'}
+                <p className="att-note">
+                  {tkTotal === 0 ? 'MasyaAllah, pertahankan yaa!' : 'Kalau berhalangan, jangan lupa izin ke coach ya'}
                 </p>
               </div>
             ) : (
@@ -220,7 +252,7 @@ export const AttendancePage: React.FC = () => {
             )}
           </BentoCard>
 
-          <BentoCard size="wide" title="Kalender Kumsub" subtitle={currentMonth?.label} loading={busy}>
+          <BentoCard size="wide" title="Kalender Kumsub" subtitle={currentMonth?.label} loading={busy} className="att-top">
             {kumsub?.found ? (
               <KumsubCalendar monthKey={selectedMonth} entries={kumsub.entries} />
             ) : (
@@ -228,26 +260,9 @@ export const AttendancePage: React.FC = () => {
             )}
           </BentoCard>
 
-          <BentoCard size="tall" title="Kegiatan program" subtitle={currentMonth?.label} loading={busy}>
+          <BentoCard size="tall" title="Kegiatan program" subtitle={currentMonth?.label} loading={busy} className="att-top">
             {program?.found && program.entries.length > 0 ? (
-              <div style={{ width: '100%', alignSelf: 'flex-start' }}>
-                {program.entries.map((entry, index) => (
-                  <div
-                    key={`${entry.date}-${index}`}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.6rem 0',
-                      borderTop: index === 0 ? 'none' : '1px solid rgba(118, 87, 67, 0.15)',
-                    }}
-                  >
-                    <span style={{ width: '3.25rem', fontSize: '0.8rem', color: '#997e67' }}>{formatDate(entry.date)}</span>
-                    <span style={{ flex: 1, color: '#42291d', fontWeight: 500 }}>{entry.label || 'Kegiatan'}</span>
-                    <StatusBadge code={entry.code} />
-                  </div>
-                ))}
-              </div>
+              <ProgramList entries={program.entries} />
             ) : (
               <EmptyText>Belum ada data program bulan ini.</EmptyText>
             )}
