@@ -10,6 +10,8 @@ import { BentoGrid, BentoCard } from '../components/bento';
 import { GaugeChart } from '../components/charts';
 import { MultiPagePDFButton } from '../components/ui/MultiPagePDFButton';
 import { MonthSelector } from '../components/ui/MonthSelector';
+import { MemberAvatar } from '../components/ui/MemberAvatar';
+import { AvatarEditButton } from '../components/ui/AvatarEditButton';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { useDashboardPrefetch } from '../hooks/useDashboardPrefetch';
@@ -290,20 +292,13 @@ export const DashboardPage: React.FC = () => {
           {/* Row 1: Profile + 3 KPI Cards */}
           <BentoCard size="profile" variant="gradient" loading={loading}>
             <div className="profile-card">
-              <div className="profile-avatar">
-                {profile?.photoURL ? (
-                  <img
-                    src={profile.photoURL}
-                    alt={profile?.name || profile?.username || 'Foto profil santri'}
-                    className="profile-avatar-image"
-                    loading="lazy"
-                    decoding="async"
-                    draggable={false}
-                  />
-                ) : (
-                  profile?.initials || 'U'
-                )}
-              </div>
+              <MemberAvatar
+                className="profile-avatar"
+                imageClassName="profile-avatar-image"
+                username={profile?.username || ''}
+                name={profile?.name}
+              />
+              {profile?.username && <AvatarEditButton />}
               <h2 className="profile-name" style={{ margin: '0.75rem 0 0.25rem 0' }}>
                 {profile?.username || 'username'}
               </h2>

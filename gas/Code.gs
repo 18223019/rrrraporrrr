@@ -253,11 +253,36 @@ function getHistory(name, months = 3) {
   }
 }
 
+/**
+ * Versi PUBLIK: dipanggil lewat web app (?path=members) dan dibaca browser.
+ * Password TIDAK boleh ikut, karena endpoint ini bisa diakses siapa saja.
+ */
 function getMembers() {
-  const cacheKey = "members_list";
+  const cacheKey = "members_list_public_v2";
   const cached = getCachedData(cacheKey);
   if (cached) return cached;
 
+  const full = getMembersWithSecrets();
+  if (!full.success) return full;
+
+  const response = {
+    ...full,
+    data: full.data.map((member) => {
+      const publicMember = { ...member };
+      delete publicMember.password;
+      return publicMember;
+    }),
+  };
+
+  setCachedData(cacheKey, response);
+  return response;
+}
+
+/**
+ * Versi INTERNAL (ada password): hanya untuk dipakai di dalam Apps Script,
+ * misalnya email blast. Jangan dipanggil dari doGet.
+ */
+function getMembersWithSecrets() {
   try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheet = ss.getSheetByName(SHEET_METADATA);
@@ -349,7 +374,6 @@ function getMembers() {
       cache: CACHE_DURATION,
     };
 
-    setCachedData(cacheKey, response);
     return response;
   } catch (error) {
     return {
@@ -425,10 +449,13 @@ function getSheetNameCandidates(month) {
   const normalized = String(month || '').trim();
   const candidates = [normalized];
 
-  if (normalized === 'September26') {
-    candidates.push('September2026');
-  } else if (normalized === 'September2026') {
-    candidates.push('September26');
+  // Terima dua format nama sheet: "Oktober26" <-> "Oktober2026"
+  const shortMatch = normalized.match(/^([A-Za-z]+)(\d{2})$/);
+  const longMatch = normalized.match(/^([A-Za-z]+)20(\d{2})$/);
+  if (shortMatch) {
+    candidates.push(`${shortMatch[1]}20${shortMatch[2]}`);
+  } else if (longMatch) {
+    candidates.push(`${longMatch[1]}${longMatch[2]}`);
   }
 
   return candidates;
@@ -634,7 +661,7 @@ function triggerRevalidateDashboard(month, slug, options) {
       success: false,
       skipped: true,
       reason: "Revalidate endpoint not configured",
-      month: resolvedMonth,
+      month: month,
       slug: slug || "",
     };
   }
@@ -729,7 +756,7 @@ function sendMonthlyRapor(month) {
   }
 
   try {
-    const members = getMembers();
+    const members = getMembersWithSecrets();
 
     if (!members.success) {
       return { error: "Failed to get members list" };
@@ -974,12 +1001,12 @@ Email otomatis – mohon tidak membalas email ini.`;
 // ========================================
 
 function testGetScores() {
-  const result = getScores("September26");
+  const result = getScores("Oktober26");
   Logger.log(JSON.stringify(result, null, 2));
 }
 
 function testGetScoreByName() {
-  const result = getScoreByName("September26", "John");
+  const result = getScoreByName("Oktober26", "John");
   Logger.log(JSON.stringify(result, null, 2));
 }
 
@@ -994,27 +1021,27 @@ function testGetMembers() {
 }
 
 function testSendEmail() {
-  const members = getMembers();
+  const members = getMembersWithSecrets();
   if (members.success && members.data.length > 0) {
     const testMember = members.data[0];
-    const scores = getScores("Oktober25");
+    const scores = getScores("Oktober26");
     if (scores.success && scores.data.length > 0) {
-      const result = sendRaporEmail(testMember, scores.data[0], "September26");
+      const result = sendRaporEmail(testMember, scores.data[0], "Oktober26");
       Logger.log("Email sent: " + result);
     }
   }
 }
 
 function testEmailBlast() {
-  const result = sendMonthlyRapor("September26");
+  const result = sendMonthlyRapor("Oktober26");
   Logger.log(JSON.stringify(result, null, 2));
 }
 
 function testSendEmailToAqeela() {
-  const targetMonth = "September26";
+  const targetMonth = "Oktober26";
   const targetEmail = "aqeelaamin25@gmail.com";
 
-  const members = getMembers();
+  const members = getMembersWithSecrets();
   if (!members.success) {
     Logger.log("Failed to load members: " + JSON.stringify(members));
     return;

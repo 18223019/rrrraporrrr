@@ -233,6 +233,11 @@ const MONTH_NAME_INDEX: Record<string, number> = {
   desember: 12,
 };
 
+// Bulan yang memakai skema ketakmiran ala September26 (skor /100, bukan dinormalisasi bobot aktif)
+const KETAKMIRAN_PERCENT_SCALE_MONTHS = new Set(['September26', 'Oktober26']);
+// Bulan yang dapat bonus flat +10 di ketakmiran. Hapus 'Oktober26' kalau Oktober tidak ada bonus.
+const KETAKMIRAN_FLAT_BONUS_MONTHS = new Set(['September26', 'Oktober26']);
+
 const OKTOBER25_CUTOFF_KEY = parseMonthKey('Oktober25');
 const NOVEMBER25_CUTOFF_KEY = parseMonthKey('November25');
 const SEPTEMBER26_CUTOFF_KEY = parseMonthKey('September26');
@@ -347,21 +352,21 @@ const computeBidangScoreInternal = (
     ? 0
     : bidang === 'osram'
       ? weightedSum / 100
-      : bidang === 'ketakmiran' && month === 'September26'
+      : bidang === 'ketakmiran' && KETAKMIRAN_PERCENT_SCALE_MONTHS.has(month ?? '')
         ? weightedSum / 100
       : weightedSum / activeWeight;
   const bonusValue = bidang === 'aktualisasi'
     ? normalizeValue(getter('Nilai bonus aktualisasi diri'))
     : null;
   const bonus = bonusValue ?? (
-    bidang === 'ketakmiran' && month === 'September26' ? 10 : 0
+    bidang === 'ketakmiran' && KETAKMIRAN_FLAT_BONUS_MONTHS.has(month ?? '') ? 10 : 0
   );
 
   const normalizedBreakdown = breakdown.map((entry) => ({
     ...entry,
     normalizedWeight:
       entry.isActive && activeWeight > 0
-        ? bidang === 'osram' || (bidang === 'ketakmiran' && month === 'September26')
+        ? bidang === 'osram' || (bidang === 'ketakmiran' && KETAKMIRAN_PERCENT_SCALE_MONTHS.has(month ?? ''))
           ? entry.originalWeight
           : (entry.originalWeight / activeWeight) * 100
         : 0,

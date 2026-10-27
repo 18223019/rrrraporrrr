@@ -8,6 +8,9 @@ import { getAvailableMonths } from '../services/api';
 import type { ApiMeta } from '../services/api';
 import { useApiRoute } from './useApiRoute';
 
+// Tambahkan bulan baru di sini setiap kali sheet bulan berikutnya siap
+const ACTIVE_MONTHS = new Set(['Agustus26', 'September26', 'Oktober26']);
+
 export interface MonthOption {
   value: string;
   label: string;
@@ -46,16 +49,17 @@ export const useAvailableMonths = () => {
 
         // Use data from API response (already in MonthOption format)
         const currentPeriodData = response.data.filter(
-          (month) => month.value === 'Agustus26' || month.value === 'September26',
+          (month) => ACTIVE_MONTHS.has(month.value),
         );
         const monthOptions: MonthOption[] = (currentPeriodData.length > 0
           ? currentPeriodData
           : [
               { value: 'Agustus26', label: 'Agustus 2026', available: true },
               { value: 'September26', label: 'September 2026', available: true },
+              { value: 'Oktober26', label: 'Oktober 2026', available: true },
             ]
         )
-          .filter((month) => month.value === 'Agustus26' || month.value === 'September26')
+          .filter((month) => ACTIVE_MONTHS.has(month.value))
           .map((month, index) => ({
           value: month.value,
           label: month.label,

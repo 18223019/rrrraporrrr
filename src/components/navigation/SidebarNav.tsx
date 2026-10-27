@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   LogOut,
+  Trophy,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { signOut } from '../../services/auth';
@@ -70,6 +71,13 @@ const getNavItems = (userSlug: string): NavItem[] => [
     path: `/${userSlug}/osram`,
     icon: <ClipboardList size={20} />,
     color: '#997e67',
+  },
+  {
+    id: 'leaderboard',
+    label: 'Leaderboard',
+    path: `/${userSlug}/leaderboard`,
+    icon: <Trophy size={20} />,
+    color: '#d4a017',
   },
 ];
 
