@@ -1,6 +1,6 @@
 /**
  * MemberAvatar — urutan sumber foto:
- * 1. Foto custom dari R2 (/api/avatar/<username>)
+ * 1. Foto custom dari Cloudflare (/api/avatar/<username>)
  * 2. Foto lokal di src/data/memberPhotos.ts (kalau ada)
  * 3. Inisial nama
  */

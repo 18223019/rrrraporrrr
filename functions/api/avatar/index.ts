@@ -6,23 +6,27 @@
  *
  * Wajib header: Authorization: Bearer <Firebase ID token>
  * Body POST: file gambar mentah (image/jpeg | image/png | image/webp), maks 512 KB.
- * Foto disimpan di R2 dengan key avatars/<username>, jadi user hanya bisa
+ * Foto disimpan di KV (atau R2) dengan key avatars/<username>, jadi user hanya bisa
  * mengubah foto miliknya sendiri (username diambil dari token, bukan dari request).
  */
 
 import { verifyFirebaseRequest } from '../../_lib/firebaseAuth';
-import { avatarKey, isValidUsername, jsonResponse } from '../../_lib/avatar';
+import {
+  deleteAvatar,
+  hasAvatarStorage,
+  isValidUsername,
+  jsonResponse,
+  putAvatar,
+  type AvatarEnv,
+} from '../../_lib/avatar';
 
-type Env = {
-  AVATAR_BUCKET?: R2Bucket;
-  FIREBASE_PROJECT_ID?: string;
-};
+type Env = AvatarEnv;
 
 const MAX_BYTES = 512 * 1024;
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.AVATAR_BUCKET) {
+  if (!hasAvatarStorage(env)) {
     return jsonResponse({ error: 'AvatarStorageNotConfigured' }, 500);
   }
 
@@ -50,17 +54,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return jsonResponse({ error: 'InvalidImage', message: 'File bukan gambar yang valid.' }, 400);
   }
 
-  const updatedAt = Date.now();
-  await env.AVATAR_BUCKET.put(avatarKey(user.username), body, {
-    httpMetadata: { contentType, cacheControl: 'public, max-age=60' },
-    customMetadata: { uid: user.uid, updatedAt: String(updatedAt) },
-  });
-
-  return jsonResponse({ success: true, username: user.username, version: updatedAt });
+  const version = await putAvatar(env, user.username, body, contentType, user.uid);
+  return jsonResponse({ success: true, username: user.username, version: Number(version) });
 };
 
 export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.AVATAR_BUCKET) {
+  if (!hasAvatarStorage(env)) {
     return jsonResponse({ error: 'AvatarStorageNotConfigured' }, 500);
   }
 
@@ -69,7 +68,7 @@ export const onRequestDelete: PagesFunction<Env> = async ({ request, env }) => {
     return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
-  await env.AVATAR_BUCKET.delete(avatarKey(user.username));
+  await deleteAvatar(env, user.username);
   return jsonResponse({ success: true, username: user.username, version: Date.now() });
 };
 

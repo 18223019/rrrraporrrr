@@ -1,5 +1,5 @@
 /**
- * Foto profil custom — disimpan di Cloudflare R2 lewat /api/avatar.
+ * Foto profil custom — disimpan di Cloudflare KV (atau R2) lewat /api/avatar.
  * Catatan: endpoint ini hanya ada di Cloudflare Pages. Saat `npm run dev`
  * (Vite saja) avatar akan 404 dan otomatis jatuh ke inisial/foto lokal.
  * Untuk tes lokal pakai `npm run build && npm run pages:dev`.
