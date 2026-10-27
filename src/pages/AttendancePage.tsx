@@ -1,38 +1,33 @@
 /**
  * AttendancePage — kehadiran Kumsub (kumpul subuh) & Program asrama.
  * Hanya informasi: nilai kehadiran sudah termasuk di akumulasi rapor.
- * Data: spreadsheet "Penilaian Kehadiran 26/27" lewat Apps Script ?path=attendance.
+ * Memakai komponen yang sama dengan Dashboard (BentoGrid, BentoCard, GaugeChart).
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, BookOpen, CalendarCheck, Sunrise } from 'lucide-react';
+import { BentoGrid, BentoCard } from '../components/bento';
+import { GaugeChart } from '../components/charts';
 import { MonthSelector } from '../components/ui/MonthSelector';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useMonthSelector } from '../hooks/useMonthSelector';
 import { useAttendance } from '../hooks/useAttendance';
 import type { AttendanceCode, AttendanceEntry, AttendanceSection } from '../services/api';
+import '../styles/attendance.css';
 
-// Warna per tingkat poin (5 → 0)
-const LEVEL_STYLE: Record<number, { bg: string; fg: string }> = {
-  5: { bg: '#b9d98f', fg: '#27500a' },
-  4: { bg: '#e3efd2', fg: '#3b6d11' },
-  3: { bg: '#f6deb0', fg: '#854f0b' },
-  2: { bg: '#d6e6f7', fg: '#0c447c' },
-  1: { bg: '#f5d2c4', fg: '#993c1d' },
-  0: { bg: '#d9534f', fg: '#ffffff' },
+// Palet tanah sesuai warna web (lihat src/styles/colors.css)
+// tone = kelas warna teks di src/styles/attendance.css
+const CODE_STYLE: Record<AttendanceCode, { bg: string; tone: string }> = {
+  H1: { bg: '#6f8555', tone: 'att-on-dark' },
+  H2: { bg: '#98a677', tone: 'att-on-dark' },
+  H3: { bg: '#d4b27c', tone: 'att-on-light' },
+  S1: { bg: '#d4b27c', tone: 'att-on-light' },
+  I: { bg: '#c9b8a6', tone: 'att-on-light' },
+  S2: { bg: '#b87845', tone: 'att-on-dark' },
+  H4: { bg: '#b87845', tone: 'att-on-dark' },
+  TK: { bg: '#9b4f3f', tone: 'att-on-dark' },
 };
-
-const CODE_POINTS: Record<AttendanceCode, number> = { H1: 5, H2: 4, H3: 3, S1: 3, I: 2, S2: 1, H4: 1, TK: 0 };
-
-const LEGEND: Array<{ codes: string; points: number; desc: string }> = [
-  { codes: 'H1', points: 5, desc: 'Hadir tepat waktu, penuh' },
-  { codes: 'H2', points: 4, desc: 'Menyusul / pulang duluan / tidak fokus' },
-  { codes: 'H3 · S1', points: 3, desc: 'Telat 5–15 menit · sakit tk. 1' },
-  { codes: 'I', points: 2, desc: 'Izin sesuai SOP' },
-  { codes: 'S2 · H4', points: 1, desc: 'Sakit tk. 2 / izin mendadak · telat >15 menit' },
-  { codes: 'TK', points: 0, desc: 'Tanpa keterangan' },
-];
+const EMPTY_STYLE = { bg: 'rgba(118, 87, 67, 0.1)', tone: 'att-muted' };
 
 const MONTH_INDEX: Record<string, number> = {
   januari: 0, februari: 1, maret: 2, april: 3, mei: 4, juni: 5,
@@ -58,78 +53,29 @@ function formatDate(date: string): string {
   return parsed ? `${parsed.day} ${SHORT_MONTH[parsed.month] ?? ''}` : date || '-';
 }
 
-const card: React.CSSProperties = {
-  background: '#fffbf4',
-  borderRadius: 20,
-  boxShadow: 'var(--shadow-lg)',
-  padding: '1.25rem 1.5rem',
-};
+const attendedCount = (section?: AttendanceSection) =>
+  section ? section.summary.count - (section.summary.counts.TK ?? 0) : 0;
 
-const Chip: React.FC<{ code: AttendanceCode | string; points: number; children?: React.ReactNode }> = ({ code, points, children }) => {
-  const style = LEVEL_STYLE[points] ?? LEVEL_STYLE[0];
+const EmptyText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div style={{ color: 'var(--text-secondary)', textAlign: 'center', width: '100%' }}>{children}</div>
+);
+
+const StatusBadge: React.FC<{ code: AttendanceCode }> = ({ code }) => {
+  const style = CODE_STYLE[code];
   return (
     <span
+      className={style.tone}
       style={{
         background: style.bg,
-        color: style.fg,
-        borderRadius: 8,
-        padding: '2px 10px',
+        borderRadius: 999,
+        padding: '0.15rem 0.7rem',
         fontSize: '0.8rem',
-        fontWeight: 700,
-        whiteSpace: 'nowrap',
+        fontWeight: 600,
+        letterSpacing: '0.03em',
       }}
     >
-      {children ?? code}
+      {code}
     </span>
-  );
-};
-
-const DistributionBar: React.FC<{ section: AttendanceSection }> = ({ section }) => {
-  const { count, counts } = section.summary;
-  if (!count) return null;
-  return (
-    <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', marginTop: 10 }}>
-      {(Object.keys(CODE_POINTS) as AttendanceCode[])
-        .sort((a, b) => CODE_POINTS[b] - CODE_POINTS[a])
-        .filter((code) => counts[code] > 0)
-        .map((code) => (
-          <div
-            key={code}
-            title={`${code}: ${counts[code]}x`}
-            style={{ width: `${(counts[code] / count) * 100}%`, background: LEVEL_STYLE[CODE_POINTS[code]].bg }}
-          />
-        ))}
-    </div>
-  );
-};
-
-const SummaryCard: React.FC<{ title: string; icon: React.ReactNode; section?: AttendanceSection; unit: string }> = ({
-  title,
-  icon,
-  section,
-  unit,
-}) => {
-  const summary = section?.summary;
-  const attended = summary ? summary.count - (summary.counts.TK ?? 0) : 0;
-  return (
-    <div style={card}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#765743', fontWeight: 600 }}>
-        {icon} {title}
-      </div>
-      {section?.found && summary?.score !== null && summary ? (
-        <>
-          <div style={{ fontSize: '2rem', fontWeight: 700, color: '#42291d', marginTop: 4 }}>
-            {summary.score.toFixed(1)}%
-          </div>
-          <div style={{ fontSize: '0.9rem', color: '#765743' }}>
-            Hadir {attended} dari {summary.count} {unit} · {summary.totalPoints}/{summary.maxPoints} poin
-          </div>
-          <DistributionBar section={section} />
-        </>
-      ) : (
-        <div style={{ fontSize: '0.95rem', color: '#765743', marginTop: 8 }}>Belum ada data bulan ini</div>
-      )}
-    </div>
   );
 };
 
@@ -147,41 +93,40 @@ const KumsubCalendar: React.FC<{ monthKey: string; entries: AttendanceEntry[] }>
   const offset = (new Date(parsedMonth.year, parsedMonth.month, 1).getDay() + 6) % 7; // Senin = 0
 
   return (
-    <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6, marginBottom: 6 }}>
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.4rem', marginBottom: '0.4rem' }}>
         {WEEKDAYS.map((day) => (
-          <div key={day} style={{ textAlign: 'center', fontSize: '0.75rem', color: '#997e67', fontWeight: 600 }}>
+          <div key={day} className="label" style={{ textAlign: 'center', color: '#997e67', fontSize: '0.7rem' }}>
             {day}
           </div>
         ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.4rem' }}>
         {Array.from({ length: offset }).map((_, i) => (
           <div key={`empty-${i}`} />
         ))}
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1;
           const entry = byDay.get(day);
-          const style = entry ? LEVEL_STYLE[entry.points] : { bg: 'rgba(118, 87, 67, 0.08)', fg: '#b8a99b' };
+          const style = entry ? CODE_STYLE[entry.code] : EMPTY_STYLE;
           return (
             <div
               key={day}
-              title={entry ? `${day}: ${entry.code} (${entry.points} poin)` : `${day}: belum ada data`}
+              className={style.tone}
+              title={entry ? `${day} ${SHORT_MONTH[parsedMonth.month]}: ${entry.code}` : `${day} ${SHORT_MONTH[parsedMonth.month]}`}
               style={{
-                aspectRatio: '1',
-                borderRadius: 10,
+                height: '2.9rem',
+                borderRadius: 12,
                 background: style.bg,
-                color: style.fg,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 700,
-                lineHeight: 1.1,
+                lineHeight: 1.15,
               }}
             >
-              <span style={{ fontSize: '0.85rem' }}>{day}</span>
-              {entry && <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>{entry.code}</span>}
+              <span className={style.tone} style={{ fontSize: '0.9rem', fontWeight: 600 }}>{day}</span>
+              {entry && <span className={style.tone} style={{ fontSize: '0.65rem', opacity: 0.9 }}>{entry.code}</span>}
             </div>
           );
         })}
@@ -198,7 +143,11 @@ export const AttendancePage: React.FC = () => {
   const { data, loading, error } = useAttendance(selectedMonth, profile?.username);
   const busy = profileLoading || loading;
 
-  const tkCount = (data?.kumsub.summary.counts.TK ?? 0) + (data?.program.summary.counts.TK ?? 0);
+  const kumsub = data?.kumsub;
+  const program = data?.program;
+  const tkKumsub = kumsub?.summary.counts.TK ?? 0;
+  const tkProgram = program?.summary.counts.TK ?? 0;
+  const hasData = Boolean(kumsub?.found || program?.found);
 
   return (
     <div className="dashboard-page">
@@ -211,97 +160,100 @@ export const AttendancePage: React.FC = () => {
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '2.25rem', fontWeight: 700, color: '#42291d', margin: 0, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <CalendarCheck size={32} color="#8b5e3c" /> Kehadiran
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-primary)', margin: '0 0 0.5rem 0' }}>
+              Kehadiran
             </h1>
-            <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0' }}>
-              Rekap kehadiran Kumsub dan program asrama
-              {currentMonth ? <> periode <strong>{currentMonth.label}</strong></> : null}
-            </p>
+            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Rekap kehadiran Kumsub dan program asrama</p>
           </div>
           <MonthSelector months={months} selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} loading={monthsLoading} />
         </div>
+        {currentMonth && (
+          <p style={{ marginTop: '0.75rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+            Berikut catatan kehadiranmu untuk periode <strong>{currentMonth.label}</strong> ya! ^^
+          </p>
+        )}
       </motion.div>
 
-      {busy && <div style={{ ...card, textAlign: 'center', color: '#765743' }}>Memuat kehadiran…</div>}
-
-      {!busy && error && (
-        <div style={{ ...card, textAlign: 'center', color: '#b91c1c' }}>Gagal memuat kehadiran. Coba muat ulang halaman.</div>
-      )}
-
-      {!busy && !error && data && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-            <SummaryCard title="Kumsub (kumpul subuh)" icon={<Sunrise size={18} />} section={data.kumsub} unit="hari" />
-            <SummaryCard title="Program asrama" icon={<BookOpen size={18} />} section={data.program} unit="kegiatan" />
-            <div style={card}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#765743', fontWeight: 600 }}>
-                <AlertTriangle size={18} /> Tanpa keterangan
+      <div className="page-16-9 dashboard-content">
+        <BentoGrid>
+          <BentoCard size="medium" title="Kumsub" subtitle="Kumpul subuh" category="ketakmiran" loading={busy}>
+            {kumsub?.found && kumsub.summary.score !== null ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <GaugeChart value={kumsub.summary.score} label="Kumsub" category="ketakmiran" size="large" showValue animated />
+                <p style={{ margin: '0.5rem 0 0', color: '#765743', fontSize: '0.9rem' }}>
+                  Hadir {attendedCount(kumsub)} dari {kumsub.summary.count} hari
+                </p>
               </div>
-              <div style={{ fontSize: '2rem', fontWeight: 700, color: tkCount > 0 ? '#b91c1c' : '#3b6d11', marginTop: 4 }}>
-                {tkCount}x
-              </div>
-              <div style={{ fontSize: '0.9rem', color: '#765743' }}>
-                {data.kumsub.summary.counts.TK ?? 0} Kumsub · {data.program.summary.counts.TK ?? 0} Program
-              </div>
-            </div>
-          </div>
+            ) : (
+              <EmptyText>{error ? 'Gagal memuat data.' : 'Belum ada data bulan ini.'}</EmptyText>
+            )}
+          </BentoCard>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', alignItems: 'start' }}>
-            <div style={card}>
-              <h3 style={{ margin: '0 0 1rem', color: '#42291d' }}>Kalender Kumsub</h3>
-              {data.kumsub.found ? (
-                <KumsubCalendar monthKey={selectedMonth} entries={data.kumsub.entries} />
-              ) : (
-                <p style={{ color: '#765743', margin: 0 }}>Belum ada data Kumsub bulan ini.</p>
-              )}
-            </div>
+          <BentoCard size="medium" title="Program asrama" subtitle="Kajian & pembinaan" category="pembinaan" loading={busy}>
+            {program?.found && program.summary.score !== null ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <GaugeChart value={program.summary.score} label="Program" category="pembinaan" size="large" showValue animated />
+                <p style={{ margin: '0.5rem 0 0', color: '#765743', fontSize: '0.9rem' }}>
+                  Hadir {attendedCount(program)} dari {program.summary.count} kegiatan
+                </p>
+              </div>
+            ) : (
+              <EmptyText>{error ? 'Gagal memuat data.' : 'Belum ada data bulan ini.'}</EmptyText>
+            )}
+          </BentoCard>
 
-            <div style={card}>
-              <h3 style={{ margin: '0 0 0.5rem', color: '#42291d' }}>Kegiatan program</h3>
-              {data.program.found && data.program.entries.length > 0 ? (
-                <div>
-                  {data.program.entries.map((entry, index) => (
-                    <div
-                      key={`${entry.date}-${index}`}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '0.6rem 0',
-                        borderTop: index === 0 ? 'none' : '1px solid rgba(118, 87, 67, 0.15)',
-                      }}
-                    >
-                      <span style={{ width: 56, fontSize: '0.85rem', color: '#997e67' }}>{formatDate(entry.date)}</span>
-                      <span style={{ flex: 1, color: '#42291d', fontWeight: 500 }}>{entry.label || 'Kegiatan'}</span>
-                      <Chip code={entry.code} points={entry.points} />
-                    </div>
-                  ))}
+          <BentoCard size="medium" title="Tanpa keterangan" subtitle="Jumlah TK bulan ini" category="internal" loading={busy}>
+            {hasData ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: '0.5rem' }}>
+                <div className={`stat-number ${tkKumsub + tkProgram > 0 ? 'att-danger' : 'att-good'}`} style={{ fontSize: '3.25rem' }}>
+                  {tkKumsub + tkProgram}
                 </div>
-              ) : (
-                <p style={{ color: '#765743', margin: 0 }}>Belum ada data program bulan ini.</p>
-              )}
-            </div>
-          </div>
+                <p style={{ margin: 0, color: '#765743', fontSize: '0.9rem', textAlign: 'center' }}>
+                  {tkKumsub} di Kumsub · {tkProgram} di Program
+                </p>
+                <p style={{ margin: '0.25rem 0 0', color: '#997e67', fontSize: '0.8rem', textAlign: 'center' }}>
+                  {tkKumsub + tkProgram === 0 ? 'MasyaAllah, pertahankan yaa!' : 'Kalau berhalangan, jangan lupa izin ke coach ya'}
+                </p>
+              </div>
+            ) : (
+              <EmptyText>{error ? 'Gagal memuat data.' : 'Belum ada data bulan ini.'}</EmptyText>
+            )}
+          </BentoCard>
 
-          <div style={card}>
-            <h3 style={{ margin: '0 0 0.75rem', color: '#42291d' }}>Keterangan poin</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.6rem 1.25rem' }}>
-              {LEGEND.map((item) => (
-                <div key={item.codes} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem', color: '#765743' }}>
-                  <Chip code={item.codes} points={item.points}>
-                    {item.codes} = {item.points}
-                  </Chip>
-                  {item.desc}
-                </div>
-              ))}
-            </div>
-            <p style={{ fontSize: '0.8rem', color: '#997e67', margin: '0.9rem 0 0' }}>
-              Skor = total poin ÷ (5 × jumlah kegiatan). Nilai kehadiran sudah termasuk di nilai rapor; halaman ini sebagai informasi.
-            </p>
-          </div>
-        </div>
-      )}
+          <BentoCard size="wide" title="Kalender Kumsub" subtitle={currentMonth?.label} loading={busy}>
+            {kumsub?.found ? (
+              <KumsubCalendar monthKey={selectedMonth} entries={kumsub.entries} />
+            ) : (
+              <EmptyText>Belum ada data Kumsub bulan ini.</EmptyText>
+            )}
+          </BentoCard>
+
+          <BentoCard size="tall" title="Kegiatan program" subtitle={currentMonth?.label} loading={busy}>
+            {program?.found && program.entries.length > 0 ? (
+              <div style={{ width: '100%', alignSelf: 'flex-start' }}>
+                {program.entries.map((entry, index) => (
+                  <div
+                    key={`${entry.date}-${index}`}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.6rem 0',
+                      borderTop: index === 0 ? 'none' : '1px solid rgba(118, 87, 67, 0.15)',
+                    }}
+                  >
+                    <span style={{ width: '3.25rem', fontSize: '0.8rem', color: '#997e67' }}>{formatDate(entry.date)}</span>
+                    <span style={{ flex: 1, color: '#42291d', fontWeight: 500 }}>{entry.label || 'Kegiatan'}</span>
+                    <StatusBadge code={entry.code} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyText>Belum ada data program bulan ini.</EmptyText>
+            )}
+          </BentoCard>
+        </BentoGrid>
+      </div>
     </div>
   );
 };

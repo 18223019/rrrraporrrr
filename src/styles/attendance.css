@@ -1,0 +1,21 @@
+/* Halaman Kehadiran — warna teks di atas kotak status.
+   Perlu spesifisitas lebih tinggi dari `.bento-card [style*="color"]` di bento-grid.css */
+.bento-card .att-on-dark.att-on-dark {
+  color: #fffbf4 !important;
+}
+
+.bento-card .att-on-light.att-on-light {
+  color: #42291d !important;
+}
+
+.bento-card .att-muted.att-muted {
+  color: #b8a99b !important;
+}
+
+.bento-card .att-danger.att-danger {
+  color: #9b4f3f !important;
+}
+
+.bento-card .att-good.att-good {
+  color: #6f8555 !important;
+}
