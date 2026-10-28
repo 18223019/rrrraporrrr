@@ -1,0 +1,259 @@
+/* =========================================================
+   Polish UI — keterbacaan & konsistensi di semua halaman
+   Dimuat setelah index.css (lihat src/main.tsx).
+   ========================================================= */
+
+/* ---------- Subjudul di header halaman (krem di atas latar cokelat) ---------- */
+.page-header p,
+.page-subtitle {
+  color: #f6e8d9 !important;
+  text-shadow: 0 1px 2px rgba(66, 41, 29, 0.25);
+}
+
+.page-header p strong {
+  color: #fff6ec;
+}
+
+/* ---------- Pilihan bulan ----------
+   Tema mengganti --text-primary jadi krem, sementara latar tombol putih,
+   sehingga teks bulan nyaris tak terlihat di perangkat mode terang. */
+.month-selector .month-selector-trigger,
+.month-selector .month-selector-trigger:disabled {
+  background: #fffbf4;
+  border: 1.5px solid rgba(118, 87, 67, 0.25);
+  color: #42291d;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(66, 41, 29, 0.12);
+}
+
+.month-selector .month-selector-trigger:hover:not(:disabled) {
+  border-color: #a9744f;
+  box-shadow: 0 6px 18px rgba(66, 41, 29, 0.18);
+}
+
+.month-selector .month-selector-icon,
+.month-selector .month-selector-chevron {
+  color: #8b5e3c;
+}
+
+.month-selector .month-selector-menu {
+  background: #fffbf4;
+  border: 1px solid rgba(118, 87, 67, 0.2);
+  box-shadow: 0 12px 32px rgba(66, 41, 29, 0.22);
+}
+
+.month-selector .month-selector-header {
+  background: #f3e7d8;
+  color: #765743;
+}
+
+.month-selector .month-selector-item {
+  color: #42291d;
+}
+
+.month-selector .month-selector-item:hover:not(.disabled) {
+  background: #f3e7d8;
+  color: #42291d;
+}
+
+.month-selector .month-selector-item.selected {
+  background: #ead6c1;
+  color: #42291d;
+  font-weight: 600;
+}
+
+.month-selector .month-selector-item.disabled {
+  color: #b8a99b;
+}
+
+.month-selector .month-selector-item-check {
+  color: #8b5e3c;
+}
+
+/* ---------- Gauge ----------
+   Judul kartu sudah menyebut nama bidang, jadi label di atas gauge disembunyikan.
+   Angka diletakkan di tengah lengkung gauge. */
+.bento-card .gauge-card-title {
+  display: none;
+}
+
+.gauge-card-value-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16%;
+  margin: 0 !important;
+  text-align: center;
+  line-height: 1;
+  font-size: 2.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.gauge-card-unit {
+  font-size: 0.5em;
+  margin-left: 0.15rem;
+}
+
+/* Gauge ukuran medium/small (kartu parameter) */
+.gauge-size-medium .gauge-card-value-center {
+  font-size: 1.75rem;
+  bottom: 14%;
+}
+
+.gauge-size-small .gauge-card-value-center {
+  font-size: 1.3rem;
+  bottom: 12%;
+}
+
+/* ---------- Kartu penuh satu baris ---------- */
+.bento-card-full {
+  grid-column: 1 / -1 !important;
+}
+
+/* ---------- Halaman bidang: footer bobot & kontribusi ---------- */
+.weight-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.bento-card .weight-chip {
+  display: inline-flex;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(118, 87, 67, 0.1);
+  color: #5f4030;
+  font-size: 0.82rem;
+}
+
+.bento-card .weight-chip strong {
+  color: #42291d;
+}
+
+.bento-card .weight-chip-active {
+  background: rgba(111, 133, 85, 0.16);
+}
+
+.bento-card .weight-note {
+  width: 100%;
+  font-size: 0.8rem;
+  color: #765743;
+  font-style: italic;
+}
+
+.bento-card .param-contribution {
+  margin-top: 0.75rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(118, 87, 67, 0.1);
+  color: #5f4030;
+  font-size: 0.92rem;
+}
+
+.bento-card .param-contribution strong {
+  color: #42291d;
+}
+
+/* ---------- Kartu umum: teks keterangan minimal 13px ---------- */
+.bento-card-subtitle {
+  font-size: 0.9rem;
+}
+
+/* ---------- Coach: pesan error ---------- */
+.coach-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  background: #fbeee6;
+  border: 1px solid #e7c3b3;
+  color: #9b4f3f;
+}
+
+.coach-error__title {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+  color: #7a3a2d;
+}
+
+.coach-error__message {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #8a5243;
+}
+
+/* ---------- Coach: badge peringkat & footer tabel ---------- */
+.coach-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: #f3e1cf;
+  color: #664930;
+  box-shadow: 0 1px 3px rgba(66, 41, 29, 0.15);
+}
+
+.coach-rank-badge--gold {
+  background: linear-gradient(135deg, #e6c27a, #c9973f);
+  color: #42291d;
+}
+
+.coach-rank-badge--silver {
+  background: linear-gradient(135deg, #e4ddd5, #b9ada2);
+  color: #42291d;
+}
+
+.coach-rank-badge--bronze {
+  background: linear-gradient(135deg, #e0b08a, #b8794b);
+  color: #fffbf4;
+}
+
+.coach-table-footer {
+  background: #f3e7d8 !important;
+  border-top: 1px solid rgba(118, 87, 67, 0.18) !important;
+  color: #765743 !important;
+}
+
+.coach-table-footer strong {
+  color: #42291d;
+}
+
+/* ---------- Layar HP ---------- */
+@media (max-width: 640px) {
+  /* Kartu memakai lebar layar penuh, bukan terjepit padding berlapis */
+  .page-16-9 {
+    padding: 0.5rem 0 !important;
+  }
+
+  .dashboard-page,
+  .page-container {
+    padding: 0.75rem !important;
+  }
+
+  .page-16-9 .bento-card {
+    padding: 1.25rem;
+  }
+
+  /* Tombol di header boleh turun ke baris berikutnya */
+  .page-header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .page-header-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .page-header h1 {
+    font-size: 2rem !important;
+  }
+}

@@ -10,6 +10,7 @@ import { PDFTestPage } from './pages/PDFTestPage';
 import { CanaryOptInPage } from './pages/CanaryOptInPage';
 import { MetricsPage } from './pages/MetricsPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
+import { AttendancePage } from './pages/AttendancePage';
 import { MainLayout } from './layouts/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuth } from './hooks/useAuth';
@@ -113,6 +114,18 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <DashboardPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Kehadiran Kumsub & Program. Harus di atas /:slug/:bidang */}
+        <Route
+          path="/:slug/kehadiran"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AttendancePage />
               </MainLayout>
             </ProtectedRoute>
           }

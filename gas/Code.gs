@@ -22,6 +22,13 @@ const SPREADSHEET_ID = "119JaNmuiLaYtmk96ibcV1kiNTaWQoAtWgKlx1nSV6tI";
 const CACHE_DURATION = 300; // 5 minutes in seconds
 const SHEET_METADATA = "metadata";
 
+// Spreadsheet "Penilaian Kehadiran 26/27" (beda file dengan rapor).
+// Akun pemilik deployment Apps Script harus punya akses (minimal Viewer).
+const ATTENDANCE_SPREADSHEET_ID = "1_GcrKUtzTLJagALWzX9p0PNaQML3O4uF8owIckt_q2U";
+const ATTENDANCE_SHEET_TYPES = ["Kumsub", "Program"];
+// Sesuai Tabel 1. Matriks Penilaian Kehadiran
+const ATTENDANCE_POINTS = { H1: 5, H2: 4, H3: 3, S1: 3, I: 2, S2: 1, H4: 1, TK: 0 };
+
 const DEFAULT_REVALIDATE_ENDPOINT = ""; // Override via Script Properties key CLOUDFLARE_REVALIDATE_URL
 const DEFAULT_REVALIDATE_SECRET = ""; // Override via Script Properties key CLOUDFLARE_REVALIDATE_SECRET
 const DEFAULT_REVALIDATE_PREWARM = true;
@@ -50,7 +57,23 @@ function doGet(e) {
 
     let result;
 
-    if (path === "scores" || params.month) {
+    // Path khusus dicek dulu, karena ketiganya juga memakai parameter month
+    // (sebelumnya semua permintaan ber-month tertangkap sebagai "scores").
+    if (path === "attendance") {
+      result = getAttendance(params.month, params.name);
+    } else if (path === "send-monthly-rapor") {
+      result = sendMonthlyRapor(params.month);
+    } else if (path === "revalidate-dashboard") {
+      const prewarm = normalizeBooleanParam(
+        params.prewarm,
+        DEFAULT_REVALIDATE_PREWARM
+      );
+      result = triggerRevalidateDashboard(params.month, params.slug || "", {
+        reason: params.reason || "manual-trigger",
+        prewarm: prewarm,
+        source: "api",
+      });
+    } else if (path === "scores" || params.month) {
       if (params.name) {
         result = getScoreByName(params.month, params.name);
       } else {
@@ -63,22 +86,6 @@ function doGet(e) {
       result = getMembers();
     } else if (path === "months") {
       result = listAvailableMonthsWithLabels();
-    } else if (path === "send-monthly-rapor") {
-      const month = params.month;
-      result = sendMonthlyRapor(month);
-    } else if (path === "revalidate-dashboard") {
-      const month = params.month;
-      const slug = params.slug || "";
-      const reason = params.reason || "manual-trigger";
-      const prewarm = normalizeBooleanParam(
-        params.prewarm,
-        DEFAULT_REVALIDATE_PREWARM
-      );
-      result = triggerRevalidateDashboard(month, slug, {
-        reason: reason,
-        prewarm: prewarm,
-        source: "api",
-      });
     } else {
       result = { success: true, message: "Rapor Asrama API" };
     }
@@ -439,6 +446,145 @@ function listAvailableMonthsWithLabels() {
       message: error.toString(),
     };
   }
+}
+
+// ========================================
+// KEHADIRAN (Kumsub & Program)
+// ========================================
+
+/**
+ * GET ?path=attendance&month=Oktober26&name=<Panggilan>
+ * Membaca sheet Kumsub_<Bulan> dan Program_<Bulan> dari spreadsheet kehadiran.
+ */
+function getAttendance(month, name) {
+  if (!month || !name) {
+    return { error: "Month and name parameters required" };
+  }
+
+  const cacheKey = `attendance_${month}_${slugify(name)}`;
+  const cached = getCachedData(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const monthName = String(month).trim().replace(/\d+$/, "");
+    const fullName = resolveFullName(name);
+    const ss = SpreadsheetApp.openById(ATTENDANCE_SPREADSHEET_ID);
+
+    const response = {
+      success: true,
+      month: month,
+      name: name,
+      fullName: fullName,
+      points: ATTENDANCE_POINTS,
+      timestamp: new Date().toISOString(),
+      cache: CACHE_DURATION,
+    };
+
+    ATTENDANCE_SHEET_TYPES.forEach((type) => {
+      const sheet = ss.getSheetByName(`${type}_${monthName}`);
+      response[type.toLowerCase()] = sheet
+        ? parseAttendanceSheet(sheet, fullName)
+        : { available: false, found: false, entries: [], summary: summarizeAttendance([]) };
+    });
+
+    setCachedData(cacheKey, response);
+    return response;
+  } catch (error) {
+    return {
+      error: "Failed to read attendance",
+      message: error.toString(),
+    };
+  }
+}
+
+function resolveFullName(name) {
+  const target = normalizeName(name);
+  const members = getMembers();
+  if (members && members.success) {
+    const member = members.data.find(
+      (m) => normalizeName(m.username) === target || normalizeName(m.panggilan) === target
+    );
+    if (member && member.name) return member.name;
+  }
+  return String(name);
+}
+
+function normalizeName(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function parseAttendanceSheet(sheet, fullName) {
+  const values = sheet.getDataRange().getDisplayValues();
+  const lower = (v) => String(v || "").trim().toLowerCase();
+
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(values.length, 30); i += 1) {
+    if (values[i].some((cell) => lower(cell) === "nama lengkap")) {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) {
+    return { available: false, found: false, entries: [], summary: summarizeAttendance([]) };
+  }
+
+  const header = values[headerIdx];
+  const nameCol = header.findIndex((cell) => lower(cell) === "nama lengkap");
+  const lpIdx = header.findIndex((cell) => lower(cell) === "l/p");
+  const firstCol = lpIdx >= 0 ? lpIdx + 1 : nameCol + 4;
+
+  // Sheet Program punya baris nama kegiatan tepat di bawah header tanggal
+  const nextRow = values[headerIdx + 1] || [];
+  const hasLabelRow = !String(nextRow[nameCol] || "").trim() && !String(nextRow[0] || "").trim();
+  const labelRow = hasLabelRow ? nextRow : null;
+  const dataStart = headerIdx + (hasLabelRow ? 2 : 1);
+
+  const target = normalizeName(fullName);
+  const row = values.slice(dataStart).find((r) => normalizeName(r[nameCol]) === target);
+  if (!row) {
+    return { available: true, found: false, entries: [], summary: summarizeAttendance([]) };
+  }
+
+  const dateRegex = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/;
+  const entries = [];
+  let lastDate = "";
+  for (let c = firstCol; c < header.length; c += 1) {
+    const headerValue = String(header[c] || "").trim();
+    if (dateRegex.test(headerValue)) lastDate = headerValue;
+    const code = String(row[c] || "").trim().toUpperCase();
+    if (!Object.prototype.hasOwnProperty.call(ATTENDANCE_POINTS, code)) continue;
+    entries.push({
+      date: dateRegex.test(headerValue) ? headerValue : lastDate,
+      label: labelRow ? String(labelRow[c] || "").trim() : "",
+      code: code,
+      points: ATTENDANCE_POINTS[code],
+    });
+  }
+
+  return { available: true, found: true, entries: entries, summary: summarizeAttendance(entries) };
+}
+
+function summarizeAttendance(entries) {
+  const counts = {};
+  Object.keys(ATTENDANCE_POINTS).forEach((code) => (counts[code] = 0));
+  let total = 0;
+  entries.forEach((entry) => {
+    counts[entry.code] += 1;
+    total += entry.points;
+  });
+  const max = entries.length * 5;
+  return {
+    count: entries.length,
+    totalPoints: total,
+    maxPoints: max,
+    score: max > 0 ? Math.round((total / max) * 10000) / 100 : null,
+    counts: counts,
+  };
+}
+
+function testGetAttendance() {
+  const result = getAttendance("Oktober26", "Hamdani");
+  Logger.log(JSON.stringify(result, null, 2));
 }
 
 // ========================================
@@ -905,33 +1051,27 @@ function sendRaporEmail(member, score, month) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#1e293b;padding:24px 0;">
       <div class="wrapper">
         <div class="card">
-          <div class="hero">
-            <img src="https://cdn.salmanitb.site/headerEmail.png" alt="Header Rapor Asrama Salman ITB" width="640" height="160">
-          </div>
           <div class="content">
             <h1>Rapor Asrama ${monthLabel}</h1>
-            <p style="margin-bottom: 18px;">Assalamu'alaikum</p>
-            <p>Halo, <strong>${username}</strong>!</p>
-            <p>Apa kabar? Semoga kamu senantiasa dalam keadaan sehat dan berada dalam lindungan Allah SWT.</p>
+            <p>Halo, <strong>${username}</strong>! ( ◜ ‿ ◝ )</p>
+            <p>Apa kabarrr? Semoga kamu senantiasa sehat, bahagia, dan berada dalam lindungan Allah SWT, yaa.</p>
             <p>Alhamdulillah rapor asrama untuk bulan <strong>${monthLabel}</strong> sudah tersedia yaa!</p>
-            <p>Rapor ini berfungsi sebagai feedback dan evaluasi atas progres kamu selama satu bulan terakhir. Semoga hasilnya bisa menjadi motivasi untuk terus bertumbuh dan memperbaiki diri di bulan-bulan berikutnya.</p>
+            <p>Rapor ini menjadi salah satu bentuk feedback dan evaluasi atas perjalananmu selama satu bulan terakhir. Semoga hasilnya bisa menjadi bahan refleksi, penyemangat untuk terus bertumbuh, dan pengingat bahwa selalu ada ruang untuk menjadi lebih baik dari hari ke hari.</p>
             <p>Kamu bisa lihat rapor performa berasramamu melalui link berikut:</p>
             <p style="text-align: center;">
               <a class="cta" href="${loginUrl}" target="_blank" rel="noopener">Dashboard Rapor Asrama</a>
             </p>
-            <p>(Aktifin <strong>Mode Desktop</strong> ya, atau buka di laptop/PC)</p>
-            <p>Gunakan akun <strong>${username}</strong> untuk login:</p>
+            <p>Gunakan akunmu untuk login:</p>
             <div class="credentials">
               <div><strong>Username:</strong> ${useraccount}</div>
               <div><strong>Password:</strong> ${password}</div>
             </div>
-            <p style="color: #b91c1c; font-weight: 600;">⚠️ Harap menjaga kerahasiaan akun kamu ya! Jika kamu merasa mengalami kebocoran data, segera hubungi coach.</p>
-            <p>Terus semangat dalam meniti perjalanan di asrama! Semoga setiap langkahmu menjadi amal kebaikan dan hikmah yang berharga.</p>
-            <p>Dan satu lagi… <strong>SEMANGAT UTS NYAA!!!</strong></p>
-            <p style="margin-top: 24px;">Have a nice day ^^</p>
+            <p style="color: #b91c1c; font-weight: 600;">⚠️ Harap menjaga kerahasiaan akun dan password ini. Password bersifat pribadi dan tidak boleh dibagikan kepada siapa pun.</p>
+            <p>Apa pun hasil yang kamu dapatkan bulan ini, semoga bisa menjadi bekal untuk melangkah lebih baik di bulan berikutnya. Tetap semangat berproses, jangan lupa mengapresiasi setiap progres kecilmu, dan terus libatkan Allah dalam setiap langkahmu.</p>
+            <p>Semoga Allah mudahkan setiap urusanmu, berkahi proses bertumbuhmu, dan jadikan setiap usaha kecilmu bernilai kebaikan di sisi-Nya. Aamiin yaa Rabbal 'aalamiin. 🤲🏻</p>
+            <p style="margin-top: 24px;">Have a nice dayy &lt;3</p>
             <p style="margin-top: 24px;">Wassalamu’alaikum warahmatullahi wabarakatuh.</p>
-            <p style="margin-top: 24px;">Best Regards,<br><strong>Coach Asrama 26/27</strong></p>
-            
+            <p style="margin-top: 24px;">With love,<br><strong>Coach Asrama 26/27 ^^</strong></p>
           </div>
           <div class="footer">
             Email otomatis – mohon tidak membalas email ini.<br>
@@ -943,16 +1083,13 @@ function sendRaporEmail(member, score, month) {
     </html>
   `;
 
-  const plainBody = `Assalamualaikum
+  const plainBody = `Halo, ${username}! ( ◜ ‿ ◝ )
 
-Halo, ${username}!
-
-Apa kabar? Semoga kamu senantiasa dalam keadaan sehat dan berada dalam lindungan Allah SWT.
+Apa kabarrr? Semoga kamu senantiasa sehat, bahagia, dan berada dalam lindungan Allah SWT, yaa.
 
 Alhamdulillah rapor asrama untuk bulan ${monthLabel} sudah tersedia yaa!
 
-Rapor ini berfungsi sebagai feedback dan evaluasi atas progres kamu selama satu bulan terakhir.
-Semoga hasilnya bisa menjadi motivasi untuk terus bertumbuh dan memperbaiki diri di bulan-bulan berikutnya.
+Rapor ini menjadi salah satu bentuk feedback dan evaluasi atas perjalananmu selama satu bulan terakhir. Semoga hasilnya bisa menjadi bahan refleksi, penyemangat untuk terus bertumbuh, dan pengingat bahwa selalu ada ruang untuk menjadi lebih baik dari hari ke hari.
 
 Kamu bisa lihat rapor performa berasramamu melalui link berikut:
 ${loginUrl}
@@ -964,15 +1101,16 @@ Gunakan akunmu untuk login:
 ⚠️ Harap menjaga kerahasiaan akun dan password ini.
 Password bersifat pribadi dan tidak boleh dibagikan kepada siapa pun.
 
-Terus semangat dalam meniti perjalanan di asrama!
-Semoga setiap langkahmu menjadi amal kebaikan dan hikmah yang berharga.
-Dan satu lagi… SEMANGAT UTS NYAA!!!
-Have a nice day^^
+Apa pun hasil yang kamu dapatkan bulan ini, semoga bisa menjadi bekal untuk melangkah lebih baik di bulan berikutnya. Tetap semangat berproses, jangan lupa mengapresiasi setiap progres kecilmu, dan terus libatkan Allah dalam setiap langkahmu.
+
+Semoga Allah mudahkan setiap urusanmu, berkahi proses bertumbuhmu, dan jadikan setiap usaha kecilmu bernilai kebaikan di sisi-Nya. Aamiin yaa Rabbal 'aalamiin. 🤲🏻
+
+Have a nice dayy <3
 
 Wassalamu’alaikum warahmatullahi wabarakatuh.
 
-Best Regards,
-Coach Asrama 26/27
+With love,
+Coach Asrama 26/27 ^^
 
 --
 Email otomatis – mohon tidak membalas email ini.`;

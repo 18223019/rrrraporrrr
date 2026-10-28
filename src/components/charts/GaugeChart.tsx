@@ -24,6 +24,7 @@ interface GaugeChartProps {
   showValue?: boolean;
   animated?: boolean;
   useZoneColors?: boolean; // Use dynamic zone colors instead of category color
+  decimals?: number; // Jumlah desimal angka di tengah gauge (default 0)
   target?: number; // Target value to display
 }
 
@@ -56,6 +57,7 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
   animated = true,
   useZoneColors = false,
   target,
+  decimals = 0,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
@@ -234,7 +236,7 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
 
   return (
     <div 
-      className="gauge-chart-wrapper" 
+      className={`gauge-chart-wrapper gauge-size-${size}`} 
       role="img"
       aria-label={ariaLabel}
       style={{ width: '100%', maxWidth: width, margin: '0 auto' }}
@@ -254,6 +256,16 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
             filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1))',
           }}
         />
+        {/* Angka di tengah lengkung gauge */}
+        {showValue && (
+          <div
+            className="gauge-card-value gauge-card-value-center"
+            style={{ color: useZoneColors ? getZoneColor(value) : category ? getCategoryColor(category) : getZoneColor(value) }}
+          >
+            {decimals > 0 ? value.toFixed(decimals) : Math.round(value)}
+            {unit && <span className="gauge-card-unit">{unit}</span>}
+          </div>
+        )}
         {/* Target indicator overlay */}
         {target && (
           <div
@@ -271,15 +283,6 @@ export const GaugeChart: React.FC<GaugeChartProps> = ({
           </div>
         )}
       </div>
-      {showValue && (
-        <div
-          className="gauge-card-value"
-          style={{ color: useZoneColors ? getZoneColor(value) : category ? getCategoryColor(category) : getZoneColor(value) }}
-        >
-          {Math.round(value)}
-          {unit && <span style={{ fontSize: '0.6em', marginLeft: '0.25rem' }}>{unit}</span>}
-        </div>
-      )}
     </div>
   );
 };

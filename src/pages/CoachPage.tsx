@@ -63,17 +63,12 @@ const toNumeric = (value: number | null | undefined) =>
   typeof value === 'number' && Number.isFinite(value) ? value : 0;
 
 
+// Warna badge peringkat, lihat .coach-rank-badge--* di src/styles/polish.css
 const getTierStyles = (rank: number) => {
-  if (rank === 1) {
-    return 'bg-[#664930] text-[#ffdbbb] shadow-inner shadow-[#997e67]/40';
-  }
-  if (rank === 2) {
-    return 'bg-[#997e67] text-[#ffdbbb]';
-  }
-  if (rank === 3) {
-    return 'bg-[#ccbeb1] text-[#664930]';
-  }
-  return 'bg-[#ffdbbb] text-[#664930]';
+  if (rank === 1) return 'coach-rank-badge--gold';
+  if (rank === 2) return 'coach-rank-badge--silver';
+  if (rank === 3) return 'coach-rank-badge--bronze';
+  return '';
 };
 
 const getRowAccentClass = (rank: number) => {
@@ -203,10 +198,7 @@ export const CoachPage = () => {
         cell: (info) => (
           <div className="flex items-center justify-center">
             <span
-              className={clsx(
-                'inline-flex h-12 w-12 items-center justify-center rounded-full text-sm font-semibold shadow-sm',
-                getTierStyles(info.getValue())
-              )}
+              className={clsx('coach-rank-badge', getTierStyles(info.getValue()))}
             >
               {info.getValue()}
             </span>
@@ -322,13 +314,15 @@ export const CoachPage = () => {
           )}
 
           {error && !loading && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-rose-500" />
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-rose-800">Data tidak dapat dimuat</p>
-                  <p className="text-sm text-rose-600">{error}</p>
-                </div>
+            <div className="coach-error">
+              <AlertCircle size={22} />
+              <div>
+                <p className="coach-error__title">Data tidak dapat dimuat</p>
+                <p className="coach-error__message">
+                  {error === 'Sheet not found'
+                    ? 'Sheet untuk bulan ini belum ada di spreadsheet. Coba pilih bulan lain.'
+                    : error}
+                </p>
               </div>
             </div>
           )}
@@ -438,11 +432,8 @@ export const CoachPage = () => {
                 <div className="coach-table-footer">
                   <span>
                     Menampilkan{' '}
-                    <span className="font-semibold text-slate-900">
-                      {table.getRowModel().rows.length}
-                    </span>{' '}
-                    dari{' '}
-                    <span className="font-semibold text-slate-900">{currentMembers.length}</span> anggota.
+                    <strong>{table.getRowModel().rows.length}</strong> dari{' '}
+                    <strong>{currentMembers.length}</strong> anggota.
                   </span>
                   {globalFilter && (
                     <button

@@ -60,14 +60,15 @@ export const useAvailableMonths = () => {
             ]
         )
           .filter((month) => ACTIVE_MONTHS.has(month.value))
-          .map((month, index) => ({
+          .map((month, index, list) => ({
           value: month.value,
           label: month.label,
-          isDefault: index === 0, // First month is default
+          isDefault: index === list.length - 1, // Bulan terbaru jadi default
           }));
 
         setMonths(monthOptions);
-        setDefaultMonth(monthOptions[0]?.value || '');
+        // Coach langsung melihat bulan terbaru, bukan Agustus
+        setDefaultMonth(monthOptions[monthOptions.length - 1]?.value || '');
 
         console.log('[useAvailableMonths] Loaded months:', monthOptions.length);
 
@@ -78,13 +79,13 @@ export const useAvailableMonths = () => {
         
         // Fallback to hardcoded months if API fails
         const fallbackMonths: MonthOption[] = [
-          { value: 'Agustus26', label: 'Agustus 2026', isDefault: true },
+          { value: 'Agustus26', label: 'Agustus 2026' },
           { value: 'September26', label: 'September 2026' },
-          { value: 'Oktober26', label: 'Oktober 2026' },
+          { value: 'Oktober26', label: 'Oktober 2026', isDefault: true },
         ];
         
         setMonths(fallbackMonths);
-        setDefaultMonth('Agustus26');
+        setDefaultMonth('Oktober26');
         
         console.warn('⚠️ [useAvailableMonths] Using fallback months');
       } finally {
