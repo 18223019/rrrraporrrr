@@ -189,12 +189,15 @@ const SEPTEMBER26_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
   ],
 };
 
-// Mulai Oktober26: Aktualisasi Diri = Wisdom Journey 55% + Asra Talk 45%.
-// English Day tidak dinilai lagi. Nilai bonus aktualisasi diri tetap ditambahkan.
+// Khusus Oktober26: Aktualisasi Diri = Wisdom Journey 55% + Asra Talk 45%.
+// English Day tidak aktif bulan ini (di sheet diisi -1) dan tampil sebagai
+// "bobot tidak aktif". Nilai bonus aktualisasi diri tetap ditambahkan.
+// Bulan berikutnya kembali ke bobot September (English Day aktif lagi).
 const OKTOBER26_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
   ...SEPTEMBER26_BIDANG_PARAMETER_CONFIG,
   aktualisasi: [
     { column: 'Wisdom Journey', weight: 55 },
+    { column: 'English Day', weight: 0 },
     { column: 'Asra Talk', weight: 45 },
   ],
 };
@@ -297,7 +300,7 @@ export const getBidangParameterConfig = (
     if (bidang === 'ketakmiran' && group === 'astri') {
       return SEPTEMBER26_ASTRI_KETAKMIRAN_CONFIG;
     }
-    if (OKTOBER26_CUTOFF_KEY !== null && parsedKey >= OKTOBER26_CUTOFF_KEY) {
+    if (OKTOBER26_CUTOFF_KEY !== null && parsedKey === OKTOBER26_CUTOFF_KEY) {
       return OKTOBER26_BIDANG_PARAMETER_CONFIG[bidang];
     }
     return SEPTEMBER26_BIDANG_PARAMETER_CONFIG[bidang];
