@@ -189,6 +189,16 @@ const SEPTEMBER26_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
   ],
 };
 
+// Mulai Oktober26: Aktualisasi Diri = Wisdom Journey 55% + Asra Talk 45%.
+// English Day tidak dinilai lagi. Nilai bonus aktualisasi diri tetap ditambahkan.
+const OKTOBER26_BIDANG_PARAMETER_CONFIG: BidangConfigMap = {
+  ...SEPTEMBER26_BIDANG_PARAMETER_CONFIG,
+  aktualisasi: [
+    { column: 'Wisdom Journey', weight: 55 },
+    { column: 'Asra Talk', weight: 45 },
+  ],
+};
+
 const SEPTEMBER26_ASTRI_KETAKMIRAN_CONFIG: ReadonlyArray<BidangParameterConfig> = [
   { column: 'Takmir Harian', weight: 60 },
   { column: 'Takmir Event', weight: 12.5 },
@@ -241,6 +251,7 @@ const KETAKMIRAN_FLAT_BONUS_MONTHS = new Set(['September26', 'Oktober26']);
 const OKTOBER25_CUTOFF_KEY = parseMonthKey('Oktober25');
 const NOVEMBER25_CUTOFF_KEY = parseMonthKey('November25');
 const SEPTEMBER26_CUTOFF_KEY = parseMonthKey('September26');
+const OKTOBER26_CUTOFF_KEY = parseMonthKey('Oktober26');
 
 function parseMonthKey(month?: string): number | null {
   if (!month) {
@@ -285,6 +296,9 @@ export const getBidangParameterConfig = (
   if (parsedKey !== null && SEPTEMBER26_CUTOFF_KEY !== null && parsedKey >= SEPTEMBER26_CUTOFF_KEY) {
     if (bidang === 'ketakmiran' && group === 'astri') {
       return SEPTEMBER26_ASTRI_KETAKMIRAN_CONFIG;
+    }
+    if (OKTOBER26_CUTOFF_KEY !== null && parsedKey >= OKTOBER26_CUTOFF_KEY) {
+      return OKTOBER26_BIDANG_PARAMETER_CONFIG[bidang];
     }
     return SEPTEMBER26_BIDANG_PARAMETER_CONFIG[bidang];
   }
